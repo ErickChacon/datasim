@@ -1,10 +1,38 @@
 
-rm(list = ls())
-
+#' @title Simulate covariates based on model formula
+#'
+#' @description
+#' \code{function} description.
+#'
+#' @details
+#' details.
+#'
+#' @param par.
+#'
+#' @return return.
+#'
+#' @author Erick A. Chacon-Montalvan
+#'
+#' @examples
+#'
+#' # Structure of the model
+#' formula <- list(
+#'   mean ~ I(age ^ 2) + fa(sex, beta = c(-1, 1)) + gp(s1, s2, beta = c(-1, 0)),
+#'   sd ~ fa(sex, beta = c(1, -1))
+#' )
+#' idata <- data.frame(s1 = 1:10)
+#' (datasim <- model.frame.sim(formula, idata = idata))
+#' (datasim <- model.frame.sim(formula, n = 10))
+#'
+#'
+#' @export
 model.frame.sim <- function (formula, n = nrow(idata), idata = NULL, seed = NULL) {
 
-  generators <- c("mfe", "mgp")
-  effects <- tibble(
+  # Effects that can generate covariates
+  generators <- c("fa", "gp")
+
+  # Get effects details from formula
+  effects <- tibble::tibble(
     call = purrr::map(formula, ~ as.list(attr(terms(.), "variables"))) %>%
       purrr::map(~ .[c(-1, -2)]) %>%
       purrr::reduce(c),
@@ -12,7 +40,8 @@ model.frame.sim <- function (formula, n = nrow(idata), idata = NULL, seed = NULL
     covs = purrr::map(call, all.vars),
     type = purrr::map_chr(call, ~ as.character(.x[[1]]))
   )
-  effects
+
+  # Get covariates details from effects
   covariates <- unnest(dplyr::select(effects, -call)) %>%
     group_by(covs, type) %>%
     mutate(
@@ -20,82 +49,43 @@ model.frame.sim <- function (formula, n = nrow(idata), idata = NULL, seed = NULL
       generate = "none"
       ) %>%
     ungroup()
+
+  # Establish how and which covariates to generate
   covariates <- within(covariates, {
     generate[!(type %in% generators)] <- "gaussian"
     generate[type %in% generators & rep == 1] <- "generator"
     generate[covs %in% names(idata)] <- "none"
   })
 
-  covariates
-
+  # Which call effects should be executed and initialize data
   gener_exec <- unique(with(covariates, id[generate == "generator"]))
-
-  data <- tibble(id = 1:n)
+  data <- tibble::tibble(id = 1:n)
 
   for (i in gener_exec) {
 
-    # Replace variables that need to be simulated to NULL in the original call
+    # Replace variables that need to be simulated to NA in the original call
     aux_covs <- covariates %>%
-      filter(rep == 1, covs %in% effects$covs[[i]])
-    aux_covs_na <- map(aux_covs$generate, ~ ifelse(. == "generator", NA, .)) %>%
+      dplyr::filter(rep == 1, covs %in% effects$covs[[i]])
+    aux_covs_na <- purrr::map(aux_covs$generate, ~ ifelse(. == "generator", NA, .)) %>%
       setNames(aux_covs$covs)
     aux_call <- do.call('substitute', list(effects$call[[i]], aux_covs_na))
-    aux_call
 
     # Adding sample size to call
     aux_call <- as.list(aux_call)
     aux_call[["size"]] <- n
     aux_call <- as.call(aux_call)
-    aux_call
 
     # Generate required covariates
-    aux_names <- filter(aux_covs, generate == "generator") %>% pull("covs")
+    aux_names <- dplyr::filter(aux_covs, generate == "generator") %>%
+      dplyr::pull("covs")
     data[aux_names] <- eval(aux_call)
-    data
 
   }
+
+  # Generate covariates with Gaussian distribution
+  gauss_names <- with(covariates, covs[generate == "gaussian"])
+  data[gauss_names] <- as.data.frame(replicate(length(gauss_names), rnorm(n)))
 
   data <- dplyr::bind_cols(idata, dplyr::select(data, -id))
-  return(data)
+  return(tibble::as_tibble(data))
 }
-
-
-mfe <- function (x = NA, beta, labels = 1:length(beta), size = NULL) {
-  if (is.na(x)) {
-    output <- factor(sample(labels, size = size, replace = TRUE), labels = labels)
-  } else {
-    names(beta) <- levels(x)
-    output <- as.numeric(beta[x])
-  }
-  return(output)
-}
-
-mgp <- function (..., beta, size = NULL) {
-  vars <- list(...)
-  nvar <- purrr::map(vars, is.na) %>% do.call(sum, .)
-  if (nvar > 0) {
-    output <- replicate(nvar, list(runif(size)))
-  } else {
-    output <- s1 * beta[1] + s2 * beta[2]
-  }
-  return(output)
-}
-
-
-# Structure of the model
-formula <- list(
-  mean ~ I(popo ^ 2) + mfe(vars1, beta = c(0.1, 0, 1)) + mgp(s1, s2, bla = exp(2)),
-  # mean ~ mfe(vars1, beta = c(0.1, 0, 1)),
-  sd ~ mfe(vars1, beta = c(-1, 1, 0.5))
-)
-generator = rnorm
-n = 10
-# idata = NULL
-seed = NULL
-extent = 1
-idata = data.frame(s1 = 1:10)
-library(tidyverse)
-
-datasim <- model.frame.sim(formula, idata = idata)
-datasim
-
