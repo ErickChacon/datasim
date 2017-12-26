@@ -254,8 +254,6 @@ model.response <- function (model_frame, formula = attr(model_frame, "formula"),
 
   # Join covariates, with parameters and response variables
   model_frame <- dplyr::left_join(model_frame, as_tibble(params_ls), by = "id")
-  # %>%
-  #   dplyr::arrange(response_label)
 
   return(model_frame)
 }
