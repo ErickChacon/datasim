@@ -18,6 +18,7 @@
 #'
 #' (x <- fa(beta = -1:1, size = 10))
 #' fa(x, beta = -1:1)
+#' fa(x, beta = 1:3)
 #'
 #' @export
 fa <- function (x, beta, labels = 1:length(beta), size = NULL) {
@@ -63,7 +64,7 @@ gp <- function (..., beta, size = NULL) {
   if (!is.null(size)) {
     output <- replicate(nvar, list(runif(size)))
   } else {
-    output <- s1 * beta[1] + s2 * beta[2]
+    output <- purrr::reduce(vars, `+`)
   }
   return(output)
 }

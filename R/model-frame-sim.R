@@ -24,9 +24,15 @@
 #' (datasim <- model.frame.sim(formula, idata = idata))
 #' (datasim <- model.frame.sim(formula, n = 10))
 #'
+#' formula <- list(
+#'   mean ~ I(5 + 0.5 * x1 + 0.1 * x2 + 0.7 * id),
+#'   sd ~ I(x1)
+#' )
 #'
-#' @export
+#s' @export
 model.frame.sim <- function (formula, n = nrow(idata), idata = NULL, seed = NULL) {
+
+  if (!is.null(seed)) set.seed(seed)
 
   # Effects that can generate covariates
   generators <- c("fa", "gp")
@@ -42,8 +48,11 @@ model.frame.sim <- function (formula, n = nrow(idata), idata = NULL, seed = NULL
   )
 
   # Get covariates details from effects
+  generators_order <- rev(unique(c(generators_order, effects$type)))
   covariates <- unnest(dplyr::select(effects, -call)) %>%
-    group_by(covs, type) %>%
+    mutate(type_order = match(type, generators_order)) %>%
+    arrange(type_order) %>%
+    group_by(covs) %>%
     mutate(
       rep = 1:n(),
       generate = "none"
@@ -53,8 +62,9 @@ model.frame.sim <- function (formula, n = nrow(idata), idata = NULL, seed = NULL
   # Establish how and which covariates to generate
   covariates <- within(covariates, {
     generate[!(type %in% generators)] <- "gaussian"
-    generate[type %in% generators & rep == 1] <- "generator"
+    generate[type %in% generators] <- "generator"
     generate[covs %in% names(idata)] <- "none"
+    generate[rep != 1] <- "none"
   })
 
   # Which call effects should be executed and initialize data
@@ -86,6 +96,14 @@ model.frame.sim <- function (formula, n = nrow(idata), idata = NULL, seed = NULL
   gauss_names <- with(covariates, covs[generate == "gaussian"])
   data[gauss_names] <- as.data.frame(replicate(length(gauss_names), rnorm(n)))
 
-  data <- dplyr::bind_cols(idata, dplyr::select(data, -id))
+  # Covariates order
+  covariates_order <- unique(purrr::reduce(effects$covs, c))
+  data <- data[intersect(covariates_order, names(data))]
+
+  # Join simulated data with provided data
+  data <- dplyr::bind_cols(idata, data)
+  attr(data, "formula") <- formula
+
   return(tibble::as_tibble(data))
 }
+
