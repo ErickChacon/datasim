@@ -55,13 +55,15 @@
 #' @export
 
 sim_model <- function (formula = list(mean ~ I(1 + 2 * x1), sd ~ 1),
-                       link = list(identity, exp), generator = rnorm,
-                       n = nrow(init_data), q = 1, init_data = NULL, seed = NULL) {
+                       link_inv = list(identity, exp), generator = rnorm,
+                       n = nrow(init_data), responses = c("response"), init_data = NULL,
+                       seed = NULL) {
 
   if (!is.null(seed)) set.seed(seed)
 
   data <- model.frame.sim(formula, n = n, idata = init_data)
-  data <- model.response(model_frame = data, link = link, generator = generator, q = 1)
+  data <- model.response(model_frame = data, link_inv = link_inv, generator = generator,
+                         responses = responses)
 
   return(data)
 }
@@ -172,7 +174,7 @@ model.frame.sim <- function (formula, n = nrow(idata), idata = NULL, seed = NULL
   data[gauss_names] <- as.data.frame(replicate(length(gauss_names), rnorm(n)))
 
   # Covariates order
-  covariates_order <- unique(purrr::reduce(effects$covs, c))
+  covariates_order <- c("id", unique(purrr::reduce(effects$covs, c)))
   data <- data[intersect(covariates_order, names(data))]
 
   # Join simulated data with provided data
@@ -217,23 +219,43 @@ model.frame.sim <- function (formula, n = nrow(idata), idata = NULL, seed = NULL
 #' (model_frame <- model.frame.sim(formula, n = 10))
 #' (data <- model.response(model_frame, link = list(identity, exp)))
 #'
+#' formula <- list(
+#'   mean ~ mfe(x, beta = 1:2),
+#'   sd ~ mfe(x1, beta = 0:1)
+#' )
+#' (model_frame <- model.frame.sim(formula, n = 10))
+#' (data <- model.response(model_frame, responses = 1:2))
+#' (data <- sim_model(formula, n = 10, response = 1:2))
 #'
 #' @export
 model.response <- function (model_frame, formula = attr(model_frame, "formula"),
-                            link = list(identity, exp), generator = rnorm,
-                            q = 1, seed = NULL) {
+                            link_inv = list(identity, exp), generator = rnorm,
+                            responses = c("response"), seed = NULL) {
 
   if (!is.null(seed)) set.seed(seed)
 
+  # Get dimensions and parameters
   n <- nrow(model_frame)
+  q <- length(responses)
   params <- purrr::map_chr(formula, ~ all.vars(.)[1])
 
-  model_frame[params] <- purrr::map(formula, ~ .[[3]]) %>%
+  # Compute parameters in a new list
+  params_ls <- list()
+  params_ls[params] <- purrr::map(formula, ~ .[[3]]) %>%
     purrr::map(~ eval(., model_frame)) %>%
     purrr::map(as.numeric) %>%
-    purrr::map2(link, ~ .y(.x))
+    purrr::map2(link_inv, ~ .y(.x))
 
-  model_frame["y"] <- do.call(generator, c(n = n, model_frame[params]))
+  # Simulate response variables on the list
+  response <- ifelse(q > 1, "response", responses)
+  params_ls[response] <- list(do.call(generator, c(n = n * q, params_ls[params])))
+  if (q > 1) params_ls$response_label <- rep(responses, each = n)
+  params_ls$id <- rep(1:n, q)
+
+  # Join covariates, with parameters and response variables
+  model_frame <- dplyr::left_join(model_frame, as_tibble(params_ls), by = "id")
+  # %>%
+  #   dplyr::arrange(response_label)
 
   return(model_frame)
 }
