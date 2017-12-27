@@ -98,15 +98,21 @@ mfe <- function (x, beta) {
 #' effect_mat <- matrix(effect, ncol = 2)[id_uni, ]
 #' cov(effect_mat)
 #'
+#' (x <- mre(groups = 10, size = 10, replace = FALSE))
+#' (effect <- mre(x, sigma = matrix(c(2, 1.5, 1.5, 2), nrow = 2)))
+#'
+#' id_uni <- match(unique(x), x)
+#' effect_mat <- matrix(effect, ncol = 2)[id_uni, ]
+#' cov(effect_mat)
 #'
 #' @export
-mre <- function (x, sigma, groups, size = NULL) {
+mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
   if (!is.null(size)) {
     if (is.numeric(groups) & length(groups) == 1) {
       groups <- seq_len(groups)
       ngroups <- length(groups)
     }
-    output <- factor(sample(groups, size = size, replace = TRUE), levels = groups)
+    output <- factor(sample(groups, size = size, replace = replace), levels = groups)
   } else {
     groups <- levels(x)
     right <- kronecker(chol(sigma), diag(length(groups)))

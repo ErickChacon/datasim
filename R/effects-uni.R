@@ -49,14 +49,17 @@ fa <- function (x, beta, labels = 1:length(beta), size = NULL) {
 #' (x <- re(groups = 5, size = 15))
 #' re(x, sigma = 10)
 #'
+#' (x <- re(groups = 15, size = 15, replace = FALSE))
+#' re(x, sigma = 1)
+#'
 #' @export
-re <- function (x, sigma, groups, size = NULL) {
+re <- function (x, sigma, groups, size = NULL, replace = TRUE) {
   if (!is.null(size)) {
     if (is.numeric(groups) & length(groups) == 1) {
       groups <- seq_len(groups)
       ngroups <- length(groups)
     }
-    output <- factor(sample(groups, size = size, replace = TRUE), levels = groups)
+    output <- factor(sample(groups, size = size, replace = replace), levels = groups)
   } else {
     groups <- levels(x)
     beta <- rnorm(length(groups), 0, sigma)
