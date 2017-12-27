@@ -7,7 +7,10 @@
 #' @details
 #' details.
 #'
-#' @param par.
+#' @param x factor vector to evaluate the effect
+#' @param beta numeric vector of the effects for each level of \code{x}
+#' @param labels character vector to name the \code{levels} of \code{x}
+#' @param size numeric value to simulate the covariate \code{x}
 #'
 #' @return return.
 #'
@@ -38,7 +41,13 @@ fa <- function (x, beta, labels = 1:length(beta), size = NULL) {
 #' @details
 #' details.
 #'
-#' @param par.
+#' @param x factor vector to evaluate the random effect
+#' @param sigma variance of the random effect
+#' @param groups character vector to name the \code{levels} of \code{x} or a numeric
+#' value indicating the number of groups of \code{x}
+#' @param size numeric value to simulate the covariate \code{x}
+#' @param replace An optional argument to simulate an independent random effect with
+#' one repetition (e.g. \code{mre(groups = 100, size = 100, replace = FALSE)})
 #'
 #' @return return.
 #'
@@ -81,14 +90,12 @@ exp_cor <- function (d, phi) {
 #' @details
 #' details.
 #'
-#' @param s1 First coordinate
-#'
-#' @param s2 Second coordinate
-#'
-#' @param cov.model A character or function indicating the covariance function that
+#' @param ... coordinates
+#' @param cor.model A character or function indicating the covariance function that
 #' Should be used to compute the variance-covariance matrix
-#'
-#' @param cov.params A list of the parameters required by the \code{cov.model} function.
+#' @param cor.params A list of the parameters required by the \code{cor.model} function.
+#' @param sigma2 variance of the Gaussian process
+#' @param size numeric value to simulate the covariate \code{x}
 #'
 #' @return A vector of the realization of the Gaussian Process
 #'
@@ -111,14 +118,15 @@ exp_cor <- function (d, phi) {
 #' # ggplot(data.frame(s1, s2, y), aes(s1, s2, col = y)) +
 #' #  geom_point(size = 3)
 #'
-#' @importFrom stats dist rnorm
+#' @importFrom stats dist rnorm runif
+#' @importFrom purrr map
 #'
 #' @export
 gp <- function (..., cor.model = NULL, cor.params = NULL, sigma2 = 1, size = NULL) {
   coords <- list(...)
   if (!is.null(size)) {
     ncoords <- purrr::map(coords, is.na) %>% do.call(sum, .)
-    output <- replicate(ncoords, list(runif(size)))
+    output <- replicate(ncoords, list(stats::runif(size)))
   } else {
     coords <- do.call(cbind, coords)
     n <- nrow(coords)

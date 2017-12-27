@@ -26,6 +26,7 @@
 #' @examples
 #' rgamma_mu(100, 5, 5)
 #'
+#' @importFrom stats rgamma
 #' @export
 rgamma_mu <- function (n, mu, sigma) {
   rgamma(n, shape  = sigma, rate = sigma / mu)

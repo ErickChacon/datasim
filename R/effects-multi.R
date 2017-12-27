@@ -5,9 +5,13 @@
 #' \code{function} description.
 #'
 #' @details
-#' details.
+#' \code{mfa} has two behaviours. If \code{size == NULL}, it evaluate the effects
+#' applied to the argument \code{x}; otherwise, it generates a factor \code{x}.
 #'
-#' @param par.
+#' @param x factor vector to evaluate the effect
+#' @param beta matrix of the effects for each level of \code{x}
+#' @param labels character vector to name the \code{levels} of \code{x}
+#' @param size numeric value to simulate the covariate \code{x}
 #'
 #' @return return.
 #'
@@ -43,13 +47,13 @@ mfa <- function (x, beta, labels = 1:nrow(beta), size = NULL) {
 #'
 #' @description
 #' \code{mfe} compute the multivariate fixed effect. Generally used with
-#' \code{msim_model}.
+#' \code{sim_model}.
 #'
 #' @details
 #' details.
 #'
-#' @param x A vector of length n for which the fixed effect will be evaluated.
-#' @param beta A vector of length q, this is the fixed effect for each response
+#' @param x A vector of length \code{n} for which the fixed effect will be evaluated.
+#' @param beta A vector of length \code{q}, this is the fixed effect for each response
 #' variable.
 #'
 #' @return A matrix of dimension n x q.
@@ -75,7 +79,13 @@ mfe <- function (x, beta) {
 #' @details
 #' details.
 #'
-#' @param par.
+#' @param x factor vector to evaluate the random effect
+#' @param sigma variance matrix of the random effect
+#' @param groups character vector to name the \code{levels} of \code{x} or a numeric
+#' value indicating the number of groups of \code{x}
+#' @param size numeric value to simulate the covariate \code{x}
+#' @param replace An optional argument to simulate an independent random effect with
+#' one repetition (e.g. \code{mre(groups = 100, size = 100, replace = FALSE)})
 #'
 #' @return return.
 #'
@@ -136,18 +146,12 @@ mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
 #' @details
 #' details.
 #'
-#' @param s1 First coordinate
-#'
-#' @param s2 Second coordinate
-#'
-#' @param cov.model A character or function indicating the covariance function that
-#' Should be used to compute the variance-covariance matrix
-#'
-#' @param variance A qxq matrix of non-spatial covariance.
-#' @param nugget A qxq diagonal matrix of non-spatial noise.
-#' @param phi A q-length vector of decay parameters.
-#' @param kappa A q-length vector of kappa parameters if Matern spatial correlation
-#' function is used.
+#' @param ... coordinates
+#' @param variance A qxq cross-covariance matrix.
+#' @param cor.model A character or function indicating the covariance function that
+#' should be used to compute the correlation matrix
+#' @param cor.params List of lists indicating the parameters for each response.
+#' @param size numeric value to simulate the covariate \code{x}
 #'
 #' @return A vector of the realization of the Gaussian Process
 #'
@@ -165,11 +169,11 @@ mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
 #' var <- sqrt(diag(c(4, 4)))
 #' A <- matrix(c(1, - 0.8, 0, 0.6), nrow = 2)
 #' variance <- var %*% tcrossprod(A) %*% var
-#' nugget <- diag(0, q)
-#' phi <- rep(1 / 0.08, q)
+#' cor.params <- list(list(phi = 0.08), list(phi = 0.08))
 #'
 #' # Generate the multivariate Gaussian process
-#' y <- mgp(s1, s2, "exponential", variance, nugget, phi)
+#' y <- mgp(s1, s2, variance = variance, cor.model = "exp_cor", cor.params =
+#' cor.params)
 #' y1 <- y[1:N]
 #' y2 <- y[(N + 1):(2 * N)]
 #'
@@ -181,11 +185,9 @@ mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
 #' plot(s1, s2, cex = y1, col = 2)
 #' points(s1, s2, cex = y2, col = 3)
 #'
-#'
 #' (x <- mgp(s1 = NA, s2 = NA, size = 100))
 #' (s1 <- x[[1]])
 #' (s2 <- x[[2]])
-#' coords <- cbind(s1, s2)
 #' cor.model <- "exp_cor"
 #' cor.params <- list(list(phi = 0.05), list(phi = 0.07))
 #' variance = matrix(c(2, 1.5, 1.5, 2), nrow = 2)
@@ -208,7 +210,8 @@ mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
 #' variance <- matrix(c(1, 0.8, 0.5, 0.8, 1, 0.5, 0.5, 0.5, 1), nrow = 3)
 #' mgp(s1, variance = variance, cor.model = cor.model, cor.params = cor.params)
 #'
-#' @importFrom spBayes mkSpCov
+#' @importFrom stats dist runif rnorm model.matrix
+#' @importFrom purrr map reduce
 #'
 #' @export
 
@@ -217,21 +220,22 @@ mgp <- function (..., variance = NULL, cor.model = NULL, cor.params = NULL,
   coords <- list(...)
   if (!is.null(size)) {
     ncoords <- purrr::map(coords, is.na) %>% do.call(sum, .)
-    output <- replicate(ncoords, list(runif(size)))
+    output <- replicate(ncoords, list(stats::runif(size)))
   } else {
     coords <- do.call(cbind, coords)
     n <- nrow(coords)
     q <- nrow(variance)
     distance <- as.matrix(dist(coords))
-    rights <- map(cor.params, ~ chol(do.call(cor.model, c(list(distance), .))))
+    rights <- purrr::map(cor.params, ~ chol(do.call(cor.model, c(list(distance), .))))
 
-    igp <- map(rights, ~ as.numeric(crossprod(., rnorm(n)))) %>%
-      reduce(rbind) %>%
+    igp <- purrr::map(rights, ~ as.numeric(crossprod(., stats::rnorm(n)))) %>%
+      purrr::reduce(rbind) %>%
       as.data.frame() %>%
       as.list()
 
     variance_chol <- chol(variance)
-    mgp <- map(igp, ~ as.numeric(crossprod(variance_chol, .))) %>% reduce(rbind)
+    mgp <- purrr::map(igp, ~ as.numeric(crossprod(variance_chol, .))) %>%
+      purrr::reduce(rbind)
     output <- as.numeric(mgp)
   }
   return(output)

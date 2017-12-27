@@ -1,9 +1,18 @@
 Package: datasim
 Type: Package
-Title: What the package does (short line)
+Title: Data Simulation Based on Models Formulas
 Version: 1.0
 Date: 2017-12-22
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
-License: What license is it under?
+Authors@R: person("Erick A.", "Chacon-Montalvan", email = "eral.th07@gmail.com",
+    role = c("aut", "cre"))
+Maintainer: Erick A. Chacon-Montalvan <eral.th07@gmail.com>
+Description: This package provide tools to simulate data frames based on models
+    formulas. It works with different types of effects and multivariate models.
+License: GPL (>= 2) | file LICENSE
+Imports:
+    tidyr,
+    tibble,
+    dplyr,
+    purrr,
+    magrittr
+RoxygenNote: 6.0.1

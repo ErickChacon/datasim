@@ -8,20 +8,16 @@
 #' @param formula List of the parameters, indicating how they should be computed.
 #' similar to formula for \code{lm}, \code{glm}, \code{bamlss}, with the difference
 #' that it included the coefficients and link function explicitly.
-#'
+#' @param link_inv A list of function representing the inverse link function for the
+#' parameters.
 #' @param generator Function to generate the response variables given the parameters
-#'
 #' @param n Number of observations to be simulated
-#'
+#' @param responses character vector indicating the names of the response variables
 #' @param init_data Initial data including some variables to not been simulated.
-#'
 #' @param seed Seed to be defined with function \code{set.seed} to obtain reproducible
 #' results
 #'
-#' @param extent Spatial extent for the simulation of coordinates when a spatial effect
-#' is included.
-#'
-#' @return a \code{tibble} containing the simulated predictors, parameters and response
+#' @return A \code{tibble} containing the simulated predictors, parameters and response
 #' variable
 #'
 #' @author Erick A. Chacon-Montalvan
@@ -32,21 +28,22 @@
 #'   mean ~ I(5 + 0.5 * x1 + 0.1 * x2 + 0.7 * id1),
 #'   sd ~ exp(x1)
 #' )
-#' (model.frame.sim(f, n = 10))
+#' (model_frame(f, n = 10))
 #' (data <- sim_model(f, n = 100))
 #'
 #' # Structure of the model
 #' formula <- list(
-#'   mean ~ I(age ^ 2) + fa(sex, beta = c(-1, 1)) + gp(s1, s2, beta = c(-1, 0)),
+#'   mean ~ I(age ^ 2) + fa(sex, beta = c(-1, 1)),
 #'   sd ~ fa(sex, beta = c(1, 2))
 #' )
 #' idata <- data.frame(s1 = 1:10)
-#' (datasim <- model.frame.sim(formula, idata = idata))
-#' (datasim <- model.frame.sim(formula, n = 10))
-#' (data <- model.frame.sim(formula, n = 10))
-#' (model.response.sim(data))
+#' (datasim <- model_frame(formula, idata = idata))
+#' (datasim <- model_frame(formula, n = 10))
+#' (data <- model_frame(formula, n = 10))
+#' (model_response(data))
 #' (datasim2 <- sim_model(formula, n = 10))
-#' model.frame.sim(formula, n = 10) %>% model.response.sim()
+#' library(magrittr)
+#' model_frame(formula, n = 10) %>% model_response()
 #'
 #' @importFrom purrr map map_chr reduce
 #' @importFrom dplyr bind_cols
@@ -61,8 +58,8 @@ sim_model <- function (formula = list(mean ~ I(1 + 2 * x1), sd ~ 1),
 
   if (!is.null(seed)) set.seed(seed)
 
-  data <- model.frame.sim(formula, n = n, idata = init_data)
-  data <- model.response.sim(model_frame = data, link_inv = link_inv, generator = generator,
+  data <- model_frame(formula, n = n, idata = init_data)
+  data <- model_response(model_frame = data, link_inv = link_inv, generator = generator,
                          responses = responses)
 
   return(data)
@@ -77,7 +74,12 @@ sim_model <- function (formula = list(mean ~ I(1 + 2 * x1), sd ~ 1),
 #' @details
 #' details.
 #'
-#' @param par.
+#' @param formula List of the parameters, indicating how they should be computed.
+#' similar to formula for \code{lm}, \code{glm}, \code{bamlss}, with the difference
+#' that it included the coefficients and link function explicitly.
+#' @param n Number of observations to be simulated
+#' @param idata Initial data including some variables to not been simulated.
+#' @param seed Seed to be defined with function \code{set.seed} to obtain reproducible
 #'
 #' @return return.
 #'
@@ -91,8 +93,8 @@ sim_model <- function (formula = list(mean ~ I(1 + 2 * x1), sd ~ 1),
 #'   sd ~ fa(sex, beta = c(1, -1))
 #' )
 #' idata <- data.frame(s1 = 1:10)
-#' (datasim <- model.frame.sim(formula, idata = idata))
-#' (datasim <- model.frame.sim(formula, n = 10))
+#' (datasim <- model_frame(formula, idata = idata))
+#' (datasim <- model_frame(formula, n = 10))
 #'
 #' formula <- list(
 #'   mean ~ I(5 + 0.5 * x1 + 0.1 * x2 + 0.7 * id),
@@ -105,8 +107,14 @@ sim_model <- function (formula = list(mean ~ I(1 + 2 * x1), sd ~ 1),
 #'   sd ~ I(0)
 #' )
 #'
+#' @importFrom tibble tibble as_tibble
+#' @importFrom purrr map reduce map_chr
+#' @importFrom dplyr select mutate arrange group_by mutate ungroup bind_cols
+#' @importFrom tidyr unnest
+#' @importFrom stats setNames
+#'
 #' @export
-model.frame.sim <- function (formula, n = nrow(idata), idata = NULL, seed = NULL) {
+model_frame <- function (formula, n = nrow(idata), idata = NULL, seed = NULL) {
 
   if (!is.null(seed)) set.seed(seed)
 
@@ -124,16 +132,16 @@ model.frame.sim <- function (formula, n = nrow(idata), idata = NULL, seed = NULL
   )
 
   # Get covariates details from effects
-  generators_order <- rev(unique(c(generators_order, effects$type)))
-  covariates <- unnest(dplyr::select(effects, -call)) %>%
-    mutate(type_order = match(type, generators_order)) %>%
-    arrange(type_order) %>%
-    group_by(covs) %>%
-    mutate(
+  generators_order <- rev(unique(c(generators, effects$type)))
+  covariates <- tidyr::unnest(dplyr::select(effects, -call)) %>%
+    dplyr::mutate(type_order = match(type, generators_order)) %>%
+    dplyr::arrange(type_order) %>%
+    dplyr::group_by(covs) %>%
+    dplyr::mutate(
       rep = 1:n(),
       generate = "none"
       ) %>%
-    ungroup()
+    dplyr::ungroup()
 
   # Establish how and which covariates to generate
   covariates <- within(covariates, {
@@ -153,7 +161,7 @@ model.frame.sim <- function (formula, n = nrow(idata), idata = NULL, seed = NULL
     aux_covs <- covariates %>%
       dplyr::filter(rep == 1, covs %in% effects$covs[[i]])
     aux_covs_na <- purrr::map(aux_covs$generate, ~ ifelse(. == "generator", NA, .)) %>%
-      setNames(aux_covs$covs)
+      stats::setNames(aux_covs$covs)
     aux_call <- do.call('substitute', list(effects$call[[i]], aux_covs_na))
 
     # Adding sample size to call
@@ -193,7 +201,17 @@ model.frame.sim <- function (formula, n = nrow(idata), idata = NULL, seed = NULL
 #' @details
 #' details.
 #'
-#' @param par.
+#' @param model_frame A \code{tibble} containing all the covariates to be used.
+#' Usually this is obtained as the output of the \code{model_frame} function.
+#' @param formula An optional list of formulas to simulate the parameters of the
+#' response variables.
+#' @param link_inv A list of function representing the inverse link function for the
+#' parameters.
+#' @param generator Function to generate the response variables given the parameters
+#' @param responses character vector indicating the names of the response variables
+#' @param seed Seed to be defined with function \code{set.seed} to obtain reproducible
+#' results
+#'
 #'
 #' @return return.
 #'
@@ -206,8 +224,8 @@ model.frame.sim <- function (formula, n = nrow(idata), idata = NULL, seed = NULL
 #'   mean ~ I(5 + 0.5 * x1 + 0.1 * x2 + 0.7 * id1),
 #'   sd ~ I(x1)
 #' )
-#' (model_frame <- model.frame.sim(f, n = 10))
-#' (data <- model.response.sim(model_frame, link = list(identity, exp)))
+#' (model_frame <- model_frame(f, n = 10))
+#' (data <- model_response(model_frame, link = list(identity, exp)))
 #'
 #' beta0 <- c(-1, 1)
 #' # Structure of the model
@@ -215,19 +233,23 @@ model.frame.sim <- function (formula, n = nrow(idata), idata = NULL, seed = NULL
 #'   mean ~ fa(sex, beta = beta0),
 #'   sd ~ I(0)
 #' )
-#' (model_frame <- model.frame.sim(formula, n = 10))
-#' (data <- model.response.sim(model_frame, link = list(identity, exp)))
+#' (model_frame <- model_frame(formula, n = 10))
+#' (data <- model_response(model_frame, link = list(identity, exp)))
 #'
 #' formula <- list(
 #'   mean ~ mfe(x, beta = 1:2),
 #'   sd ~ mfe(x1, beta = 0:1)
 #' )
-#' (model_frame <- model.frame.sim(formula, n = 10))
-#' (data <- model.response.sim(model_frame, responses = 1:2))
+#' (model_frame <- model_frame(formula, n = 10))
+#' (data <- model_response(model_frame, responses = 1:2))
 #' (data <- sim_model(formula, n = 10, response = 1:2))
 #'
+#' @importFrom tibble tibble as_tibble
+#' @importFrom purrr map map_chr map2
+#' @importFrom dplyr left_join
+#'
 #' @export
-model.response.sim <- function (model_frame, formula = attr(model_frame, "formula"),
+model_response <- function (model_frame, formula = attr(model_frame, "formula"),
                             link_inv = list(identity, exp), generator = rnorm,
                             responses = c("response"), seed = NULL) {
 
@@ -252,7 +274,7 @@ model.response.sim <- function (model_frame, formula = attr(model_frame, "formul
   params_ls$id <- rep(1:n, q)
 
   # Join covariates, with parameters and response variables
-  model_frame <- dplyr::left_join(model_frame, as_tibble(params_ls), by = "id")
+  model_frame <- dplyr::left_join(model_frame, tibble::as_tibble(params_ls), by = "id")
 
   return(model_frame)
 }
