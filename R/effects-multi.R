@@ -1,4 +1,44 @@
 
+#' @title Multivariate factor effects
+#'
+#' @description
+#' \code{function} description.
+#'
+#' @details
+#' details.
+#'
+#' @param par.
+#'
+#' @return return.
+#'
+#' @author Erick A. Chacon-Montalvan
+#'
+#' @examples
+#'
+#' (x <- mfa(beta = cbind(1:2, 2:3, 0:1), size = 10))
+#' mfa(x, beta = cbind(1:2, 2:3, 0:1))
+#'
+#' (x <- mfa(beta = replicate(3, 0:2), size = 10))
+#' mfa(x, beta = replicate(3, 0:2))
+#'
+#' (x <- mfa(beta = cbind(1, 2, 0), size = 10))
+#' mfa(x, beta = cbind(1, 2, 0))
+#'
+#' @export
+mfa <- function (x, beta, labels = 1:nrow(beta), size = NULL) {
+  if (!is.null(size)) {
+    output <- factor(sample(labels, size = size, replace = TRUE), levels = labels)
+  } else {
+    if (length(labels) > 1) {
+      design <- model.matrix(~ -1 + x, data.frame(x))
+    } else {
+      design <- rep(1, length(x))
+    }
+  output <- as.numeric(design %*% beta)
+  }
+  return(output)
+}
+
 #' @title Multivariate Fixed Effect
 #'
 #' @description
@@ -20,10 +60,65 @@
 #'
 #' mfe(x = rnorm(10), beta = c(0.1, 0, 1))
 #'
+#' mfe(x = rnorm(10), beta = rep(10, 3))
+#'
 #' @export
 mfe <- function (x, beta) {
   as.numeric(matrix(x) %*% matrix(beta, nrow = 1))
 }
+
+#' @title Multivariate random effects
+#'
+#' @description
+#' \code{function} description.
+#'
+#' @details
+#' details.
+#'
+#' @param par.
+#'
+#' @return return.
+#'
+#' @author Erick A. Chacon-Montalvan
+#'
+#' @examples
+#'
+#' Sigma <- matrix(c(1, 0.8, 0.5, 0.8, 1, 0.5, 0.5, 0.5, 1), nrow = 3)
+#' (x <- mre(groups = 300, size = 300))
+#' (effect <- mre(x, sigma = Sigma))
+#'
+#' id_uni <- match(unique(x), x)
+#' effect_mat <- matrix(effect, ncol = nrow(Sigma))[id_uni, ]
+#' cov(effect_mat)
+#'
+#' (x <- mre(groups = 300, size = 3000))
+#' (effect <- mre(x, sigma = matrix(c(2, 1.5, 1.5, 2), nrow = 2)))
+#'
+#' id_uni <- match(unique(x), x)
+#' effect_mat <- matrix(effect, ncol = 2)[id_uni, ]
+#' cov(effect_mat)
+#'
+#'
+#' @export
+mre <- function (x, sigma, groups, size = NULL) {
+  if (!is.null(size)) {
+    if (is.numeric(groups) & length(groups) == 1) {
+      groups <- seq_len(groups)
+      ngroups <- length(groups)
+    }
+    output <- factor(sample(groups, size = size, replace = TRUE), levels = groups)
+  } else {
+    groups <- levels(x)
+    right <- kronecker(chol(sigma), diag(length(groups)))
+    beta <- crossprod(right, rnorm(length(groups) * nrow(sigma)))
+    beta <- matrix(beta, nrow = length(groups))
+
+    design <- model.matrix(~ -1 + x, data.frame(x))
+    output <- as.numeric(design %*% beta)
+  }
+  return(output)
+}
+
 
 #' @title Simulate a Multivariate Gaussian process
 #'
@@ -80,25 +175,58 @@ mfe <- function (x, beta) {
 #' plot(s1, s2, cex = y1, col = 2)
 #' points(s1, s2, cex = y2, col = 3)
 #'
+#'
+#' (x <- mgp(s1 = NA, s2 = NA, size = 100))
+#' (s1 <- x[[1]])
+#' (s2 <- x[[2]])
+#' coords <- cbind(s1, s2)
+#' cor.model <- "exp_cor"
+#' cor.params <- list(list(phi = 0.05), list(phi = 0.07))
+#' variance = matrix(c(2, 1.5, 1.5, 2), nrow = 2)
+#' (out <- mgp(s1, s2, variance = variance, cor.model = cor.model, cor.params = cor.params))
+#' out_mat <- matrix(out, ncol = 2)
+#' plot(out_mat)
+#' cov(out_mat)
+#'
+#' (x <- mgp(s1 = NA, size = 10))
+#' (s1 <- x[[1]])
+#' cor.model <- "exp_cor"
+#' cor.params <- list(list(phi = 0.05), list(phi = 0.07), list(phi = 1))
+#' variance <- matrix(c(1, 0.8, 0.5, 0.8, 1, 0.5, 0.5, 0.5, 1), nrow = 3)
+#' mgp(s1, variance = variance, cor.model = cor.model, cor.params = cor.params)
+#'
+#' (x <- mgp(s1 = NA, size = 100))
+#' (s1 <- x[[1]])
+#' cor.model <- "exp_cor"
+#' cor.params <- list(list(phi = 0.05), list(phi = 0.07), list(phi = 1))
+#' variance <- matrix(c(1, 0.8, 0.5, 0.8, 1, 0.5, 0.5, 0.5, 1), nrow = 3)
+#' mgp(s1, variance = variance, cor.model = cor.model, cor.params = cor.params)
+#'
 #' @importFrom spBayes mkSpCov
 #'
 #' @export
 
-mgp <- function (s1, s2, cov.model = NULL, variance = NULL, nugget = NULL, phi = NULL, kappa = NULL) {
-
-  coords <- cbind(s1, s2)
-  n <- nrow(coords)
-  q <- nrow(variance)
-
-  if (is.null(kappa)) {
-    theta <- phi
+mgp <- function (..., variance = NULL, cor.model = NULL, cor.params = NULL,
+                 size = NULL) {
+  coords <- list(...)
+  if (!is.null(size)) {
+    ncoords <- purrr::map(coords, is.na) %>% do.call(sum, .)
+    output <- replicate(ncoords, list(runif(size)))
   } else {
-    theta <- c(phi, kappa)
+    coords <- do.call(cbind, coords)
+    n <- nrow(coords)
+    q <- nrow(variance)
+    distance <- as.matrix(dist(coords))
+    rights <- map(cor.params, ~ chol(do.call(cor.model, c(list(distance), .))))
+
+    igp <- map(rights, ~ as.numeric(crossprod(., rnorm(n)))) %>%
+      reduce(rbind) %>%
+      as.data.frame() %>%
+      as.list()
+
+    variance_chol <- chol(variance)
+    mgp <- map(igp, ~ as.numeric(crossprod(variance_chol, .))) %>% reduce(rbind)
+    output <- as.numeric(mgp)
   }
-
-  varcov <- spBayes::mkSpCov(coords, variance, nugget, theta, cov.model)
-  right <- chol(varcov)
-  output <- as.numeric(crossprod(right, rnorm(n * q)))
-  as.numeric(matrix(output, nrow = n, byrow = TRUE))
-
+  return(output)
 }

@@ -44,9 +44,9 @@
 #' (datasim <- model.frame.sim(formula, idata = idata))
 #' (datasim <- model.frame.sim(formula, n = 10))
 #' (data <- model.frame.sim(formula, n = 10))
-#' (model.response(data))
+#' (model.response.sim(data))
 #' (datasim2 <- sim_model(formula, n = 10))
-#' model.frame.sim(formula, n = 10) %>% model.response()
+#' model.frame.sim(formula, n = 10) %>% model.response.sim()
 #'
 #' @importFrom purrr map map_chr reduce
 #' @importFrom dplyr bind_cols
@@ -62,7 +62,7 @@ sim_model <- function (formula = list(mean ~ I(1 + 2 * x1), sd ~ 1),
   if (!is.null(seed)) set.seed(seed)
 
   data <- model.frame.sim(formula, n = n, idata = init_data)
-  data <- model.response(model_frame = data, link_inv = link_inv, generator = generator,
+  data <- model.response.sim(model_frame = data, link_inv = link_inv, generator = generator,
                          responses = responses)
 
   return(data)
@@ -99,10 +99,9 @@ sim_model <- function (formula = list(mean ~ I(1 + 2 * x1), sd ~ 1),
 #'   sd ~ I(x1)
 #' )
 #'
-#' beta0 <- c(-1, 1)
 #' # Structure of the model
 #' formula <- list(
-#'   mean ~ fa(sex, beta = beta0),
+#'   mean ~ fa(sex, beta = c(-1,1)),
 #'   sd ~ I(0)
 #' )
 #'
@@ -208,7 +207,7 @@ model.frame.sim <- function (formula, n = nrow(idata), idata = NULL, seed = NULL
 #'   sd ~ I(x1)
 #' )
 #' (model_frame <- model.frame.sim(f, n = 10))
-#' (data <- model.response(model_frame, link = list(identity, exp)))
+#' (data <- model.response.sim(model_frame, link = list(identity, exp)))
 #'
 #' beta0 <- c(-1, 1)
 #' # Structure of the model
@@ -217,18 +216,18 @@ model.frame.sim <- function (formula, n = nrow(idata), idata = NULL, seed = NULL
 #'   sd ~ I(0)
 #' )
 #' (model_frame <- model.frame.sim(formula, n = 10))
-#' (data <- model.response(model_frame, link = list(identity, exp)))
+#' (data <- model.response.sim(model_frame, link = list(identity, exp)))
 #'
 #' formula <- list(
 #'   mean ~ mfe(x, beta = 1:2),
 #'   sd ~ mfe(x1, beta = 0:1)
 #' )
 #' (model_frame <- model.frame.sim(formula, n = 10))
-#' (data <- model.response(model_frame, responses = 1:2))
+#' (data <- model.response.sim(model_frame, responses = 1:2))
 #' (data <- sim_model(formula, n = 10, response = 1:2))
 #'
 #' @export
-model.response <- function (model_frame, formula = attr(model_frame, "formula"),
+model.response.sim <- function (model_frame, formula = attr(model_frame, "formula"),
                             link_inv = list(identity, exp), generator = rnorm,
                             responses = c("response"), seed = NULL) {
 

@@ -1,5 +1,4 @@
 
-
 #' @title Univariate factor effects
 #'
 #' @description
@@ -114,8 +113,8 @@ exp_cor <- function (d, phi) {
 #' @export
 gp <- function (..., cor.model = NULL, cor.params = NULL, sigma2 = 1, size = NULL) {
   coords <- list(...)
-  ncoords <- purrr::map(coords, is.na) %>% do.call(sum, .)
   if (!is.null(size)) {
+    ncoords <- purrr::map(coords, is.na) %>% do.call(sum, .)
     output <- replicate(ncoords, list(runif(size)))
   } else {
     coords <- do.call(cbind, coords)
