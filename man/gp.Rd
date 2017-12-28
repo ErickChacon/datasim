@@ -4,10 +4,10 @@
 \alias{gp}
 \title{Simulate a Gaussian process}
 \usage{
-gp(..., cor.model = NULL, cor.params = NULL, sigma2 = 1, size = NULL)
+gp(coords, cor.model, cor.params, sigma2 = 1, size = NULL)
 }
 \arguments{
-\item{...}{coordinates}
+\item{coords}{A list of coordinates}
 
 \item{cor.model}{A character or function indicating the covariance function that
 Should be used to compute the variance-covariance matrix}
@@ -29,20 +29,26 @@ details.
 }
 \examples{
 
-(x <- gp(s1 = NA, size = 10))
+(x <- gp(list(s1 = NA), size = 10))
 (s1 <- x[[1]])
 # Simulate and plot the realization of a Gaussian process
-(y <- gp(s1, cor.model = "exp_cor", cor.params = list(phi = 0.05)))
+(y <- gp(list(s1), cor.model = "exp_cor", cor.params = list(phi = 0.05)))
 
-(x <- gp(s1 = NA, s2 = NA, size = 10))
+(x <- gp(list(s1 = NA, s2 = NA), size = 10))
 (s1 <- x[[1]])
 (s2 <- x[[2]])
 # Simulate and plot the realization of a Gaussian process
-(y <- gp(s1, s2, cor.model = "exp_cor", cor.params = list(phi = 0.05)))
+(y <- gp(list(s1, s2), cor.model = "exp_cor", cor.params = list(phi = 0.05)))
 plot(s1, s2, cex = y)
 # Plot with ggplot
 # ggplot(data.frame(s1, s2, y), aes(s1, s2, col = y)) +
 #  geom_point(size = 3)
+
+(x <- gp(list(s1 = "none", s2 = NA), size = 10))
+(s1 <- x[[1]])
+(s2 <- s1)
+# Simulate and plot the realization of a Gaussian process
+(y <- gp(list(s1, s2), cor.model = "exp_cor", cor.params = list(phi = 0.05)))
 
 }
 \author{

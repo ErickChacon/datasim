@@ -45,6 +45,15 @@
 #' library(magrittr)
 #' model_frame(formula, n = 10) %>% model_response()
 #'
+#' f <- list(
+#'   mean ~ gp(list(s1), "exp_cor", list(phi = 0.05)),
+#'   sd ~ I(-1.6)
+#' )
+#' (data <- sim_model(f, n = 400))
+#' plot(mean ~ s1, data)
+#' plot(response ~ s1, data)
+#'
+#'
 #' @importFrom purrr map map_chr reduce
 #' @importFrom dplyr bind_cols
 #' @importFrom tibble as_tibble
@@ -89,7 +98,7 @@ sim_model <- function (formula = list(mean ~ I(1 + 2 * x1), sd ~ 1),
 #'
 #' # Structure of the model
 #' formula <- list(
-#'   mean ~ I(age ^ 2) + fa(sex, beta = c(-1, 1)) + gp(s1, s2, beta = c(-1, 0)),
+#'   mean ~ I(age ^ 2) + fa(sex, beta = c(-1, 1)),
 #'   sd ~ fa(sex, beta = c(1, -1))
 #' )
 #' idata <- data.frame(s1 = 1:10)

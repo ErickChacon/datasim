@@ -58,6 +58,15 @@ idata <- data.frame(s1 = 1:10)
 library(magrittr)
 model_frame(formula, n = 10) \%>\% model_response()
 
+f <- list(
+  mean ~ gp(list(s1), "exp_cor", list(phi = 0.05)),
+  sd ~ I(-1.6)
+)
+(data <- sim_model(f, n = 400))
+plot(mean ~ s1, data)
+plot(response ~ s1, data)
+
+
 }
 \author{
 Erick A. Chacon-Montalvan

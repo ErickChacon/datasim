@@ -30,7 +30,7 @@ details.
 
 # Structure of the model
 formula <- list(
-  mean ~ I(age ^ 2) + fa(sex, beta = c(-1, 1)) + gp(s1, s2, beta = c(-1, 0)),
+  mean ~ I(age ^ 2) + fa(sex, beta = c(-1, 1)),
   sd ~ fa(sex, beta = c(1, -1))
 )
 idata <- data.frame(s1 = 1:10)

@@ -4,11 +4,10 @@
 \alias{mgp}
 \title{Simulate a Multivariate Gaussian process}
 \usage{
-mgp(..., variance = NULL, cor.model = NULL, cor.params = NULL,
-  size = NULL)
+mgp(coords, variance, cor.model, cor.params, size = NULL)
 }
 \arguments{
-\item{...}{coordinates}
+\item{coords}{A list of coordinates}
 
 \item{variance}{A qxq cross-covariance matrix.}
 
@@ -45,8 +44,7 @@ variance <- var \%*\% tcrossprod(A) \%*\% var
 cor.params <- list(list(phi = 0.08), list(phi = 0.08))
 
 # Generate the multivariate Gaussian process
-y <- mgp(s1, s2, variance = variance, cor.model = "exp_cor", cor.params =
-cor.params)
+y <- mgp(list(s1, s2), variance, "exp_cor", cor.params)
 y1 <- y[1:N]
 y2 <- y[(N + 1):(2 * N)]
 
@@ -58,30 +56,30 @@ plot(y1, y2)
 plot(s1, s2, cex = y1, col = 2)
 points(s1, s2, cex = y2, col = 3)
 
-(x <- mgp(s1 = NA, s2 = NA, size = 100))
+(x <- mgp(list(s1 = NA, s2 = NA), size = 100))
 (s1 <- x[[1]])
 (s2 <- x[[2]])
 cor.model <- "exp_cor"
 cor.params <- list(list(phi = 0.05), list(phi = 0.07))
 variance = matrix(c(2, 1.5, 1.5, 2), nrow = 2)
-(out <- mgp(s1, s2, variance = variance, cor.model = cor.model, cor.params = cor.params))
+(out <- mgp(list(s1, s2), variance, cor.model, cor.params))
 out_mat <- matrix(out, ncol = 2)
 plot(out_mat)
 cov(out_mat)
 
-(x <- mgp(s1 = NA, size = 10))
+(x <- mgp(list(s1 = NA), size = 10))
 (s1 <- x[[1]])
 cor.model <- "exp_cor"
 cor.params <- list(list(phi = 0.05), list(phi = 0.07), list(phi = 1))
 variance <- matrix(c(1, 0.8, 0.5, 0.8, 1, 0.5, 0.5, 0.5, 1), nrow = 3)
-mgp(s1, variance = variance, cor.model = cor.model, cor.params = cor.params)
+mgp(list(s1), variance = variance, cor.model = cor.model, cor.params = cor.params)
 
-(x <- mgp(s1 = NA, size = 100))
+(x <- mgp(list(s1 = NA), size = 100))
 (s1 <- x[[1]])
 cor.model <- "exp_cor"
 cor.params <- list(list(phi = 0.05), list(phi = 0.07), list(phi = 1))
 variance <- matrix(c(1, 0.8, 0.5, 0.8, 1, 0.5, 0.5, 0.5, 1), nrow = 3)
-mgp(s1, variance = variance, cor.model = cor.model, cor.params = cor.params)
+mgp(list(s1), variance, cor.model, cor.params)
 
 }
 \author{
