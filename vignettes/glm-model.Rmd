@@ -1,0 +1,91 @@
+---
+title: "Simulate Datasets for Generalized Linear Models"
+author: "Erick A. Chacon-Montalvan"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Data Simulation for GLM}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align = "center")
+knitr::opts_chunk$set(fig.width = 6, fig.height = 4)
+knitr::opts_chunk$set(comment = "#>")
+options(width = 100)
+```
+
+In this vignette, we show how to simulate datasets to fit generalized linear models.
+We will start with a basic linear model and then to extent to the more common models
+used in the GLM framework.
+
+#### Required packages
+
+```{r}
+library(datasim)
+```
+
+## Linear Model
+
+First, we need to define a list of formulas specifying the type of effect that are
+included in the linear predictor of each parameter. For example, this list can be
+defined as follows.
+
+```{r}
+f <- list(
+  mean ~ I(5) + I(0.5 * x1) + fa(sex, beta = c(0, 1)),
+  sd ~ I(1)
+  )
+```
+
+In this formula, it can be seen that an intercept, a linear effect on `x1` and a
+factor effect on `sex` are being included on the `mean` linear predictor, while the
+standard deviation `sd` is constant. To simulate the data, we need to define the
+inverse of the link functions `link_inv` to transform the linear predictors to the
+parameters and the size of the sample `n` to be simulated. In the case of a Gaussian
+linear model, the link function is the identity function `I`.
+Then the data for our model can be simulated with the function `sim_model`.
+
+```{r}
+data <- sim_model(f, link_inv = list(I, I), n = 100)
+```
+
+The generated dataset looks as follows:
+
+```{r, echo = FALSE, results = 'asis'}
+knitr::kable(head(data, 10))
+```
+
+Some customization for the effects can be used, for instance the labels of the factor
+can be included with the option `labels` in the function `fa`.
+
+```{r}
+f <- list(
+  mean ~ I(5) + I(0.5 * x1) + fa(sex, beta = c(0, 1), labels = c("male", "female")),
+  sd ~ I(1)
+  )
+```
+
+```{r, echo = FALSE, results = 'asis'}
+data <- sim_model(f, link_inv = list(I, I), n = 100)
+knitr::kable(head(data, 10))
+```
+
+Once the data is simulated, we can use it to compare models, effects, etc. For
+example, we can fit a linear model to our simulated data with.
+
+```{r}
+lm_data <- lm(response ~ x1 + sex, data)
+sm_data <- summary(lm_data)
+```
+
+```{r, echo = FALSE, results = 'asis'}
+knitr::kable(sm_data$coefficients)
+```
+
+The estimated effects are as expected, close to `0.5` for the effect of `x1`, close
+to  `1` for the effect of `females` and an intercept close to `5`.
+
+
+
