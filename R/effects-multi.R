@@ -2,7 +2,7 @@
 #' @title Multivariate factor effects
 #'
 #' @description
-#' \code{function} description.
+#' \code{mfa} creates a multivariate factor effect given a factor.
 #'
 #' @details
 #' \code{mfa} has two behaviours. If \code{size == NULL}, it evaluate the effects

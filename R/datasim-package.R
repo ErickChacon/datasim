@@ -2,11 +2,13 @@
 #' @title datasim: Data simulation based on models formulas
 #'
 #' @docType package
-#' @name day2day
+#' @name datasim
 #'
 #' @description
 #' The \code{datasim} package provide tools to simulate data frames based on models
-#' formulas. It works with different types of effects and multivariate models.
+#' formulas. It works with different types of effects and multivariate models. The
+#' user define a list of formulas than later is used to i) simulate the covariates
+#' presented in the formula and to ii) simulate the response variable.
 #'
 #' @author Erick A. Chacon-Montalvan
 #'
