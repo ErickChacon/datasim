@@ -47,7 +47,7 @@
 #'
 #' f <- list(
 #'   mean ~ gp(list(s1), "exp_cor", list(phi = 0.05)),
-#'   sd ~ I(-1.6)
+#'   sd ~ I(1.6)
 #' )
 #' (data <- sim_model(f, n = 400))
 #' plot(mean ~ s1, data)
@@ -60,10 +60,10 @@
 #'
 #' @export
 
-sim_model <- function (formula = list(mean ~ I(1 + 2 * x1), sd ~ 1),
-                       link_inv = list(identity, exp), generator = rnorm,
-                       n = nrow(init_data), responses = c("response"), init_data = NULL,
-                       seed = NULL) {
+sim_model <- function (formula = list(mean ~ I(0), sd ~ I(1)),
+                       link_inv = replicate(length(formula), identity),
+                       generator = rnorm, n = nrow(init_data),
+                       responses = c("response"), init_data = NULL, seed = NULL) {
 
   if (!is.null(seed)) set.seed(seed)
 
@@ -99,7 +99,7 @@ sim_model <- function (formula = list(mean ~ I(1 + 2 * x1), sd ~ 1),
 #' # Structure of the model
 #' formula <- list(
 #'   mean ~ I(age ^ 2) + fa(sex, beta = c(-1, 1)),
-#'   sd ~ fa(sex, beta = c(1, -1))
+#'   sd ~ fa(sex, beta = c(1, 2))
 #' )
 #' idata <- data.frame(s1 = 1:10)
 #' (datasim <- model_frame(formula, idata = idata))
@@ -128,7 +128,7 @@ model_frame <- function (formula, n = nrow(idata), idata = NULL, seed = NULL) {
   if (!is.null(seed)) set.seed(seed)
 
   # Effects that can generate covariates
-  generators <- c("fa", "gp")
+  generators <- c("mfa", "fa", "gp", "mgp")
 
   # Get effects details from formula
   effects <- tibble::tibble(
@@ -233,25 +233,25 @@ model_frame <- function (formula, n = nrow(idata), idata = NULL, seed = NULL) {
 #'   mean ~ I(5 + 0.5 * x1 + 0.1 * x2 + 0.7 * id1),
 #'   sd ~ I(x1)
 #' )
-#' (model_frame <- model_frame(f, n = 10))
-#' (data <- model_response(model_frame, link = list(identity, exp)))
+#' (model_fr <- model_frame(f, n = 10))
+#' (data <- model_response(model_fr, link = list(identity, exp)))
 #'
 #' beta0 <- c(-1, 1)
 #' # Structure of the model
 #' formula <- list(
-#'   mean ~ fa(sex, beta = beta0),
+#'   mean ~ fa(sex, beta = get("beta0")),
 #'   sd ~ I(0)
 #' )
-#' (model_frame <- model_frame(formula, n = 10))
-#' (data <- model_response(model_frame, link = list(identity, exp)))
+#' (model_fr <- model_frame(formula, n = 10))
+#' (data <- model_response(model_fr, link = list(identity, exp)))
 #'
 #' formula <- list(
 #'   mean ~ mfe(x, beta = 1:2),
-#'   sd ~ mfe(x1, beta = 0:1)
+#'   sd ~ mfe(x1, beta = 1:2)
 #' )
-#' (model_frame <- model_frame(formula, n = 10))
-#' (data <- model_response(model_frame, responses = 1:2))
-#' (data <- sim_model(formula, n = 10, response = 1:2))
+#' (model_fr <- model_frame(formula, n = 10))
+#' (data <- model_response(model_fr, link_inv = list(identity, exp), responses = 1:2))
+#' (data <- sim_model(formula, link_inv = list(identity, exp), n = 10, responses = 1:2))
 #'
 #' @importFrom tibble tibble as_tibble
 #' @importFrom purrr map map_chr map2
@@ -259,7 +259,8 @@ model_frame <- function (formula, n = nrow(idata), idata = NULL, seed = NULL) {
 #'
 #' @export
 model_response <- function (model_frame, formula = attr(model_frame, "formula"),
-                            link_inv = list(identity, exp), generator = rnorm,
+                            link_inv = replicate(length(formula), identity),
+                            generator = rnorm,
                             responses = c("response"), seed = NULL) {
 
   if (!is.null(seed)) set.seed(seed)

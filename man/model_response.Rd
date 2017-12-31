@@ -5,7 +5,7 @@
 \title{Simulate response variable}
 \usage{
 model_response(model_frame, formula = attr(model_frame, "formula"),
-  link_inv = list(identity, exp), generator = rnorm,
+  link_inv = replicate(length(formula), identity), generator = rnorm,
   responses = c("response"), seed = NULL)
 }
 \arguments{
@@ -41,25 +41,25 @@ f <- list(
   mean ~ I(5 + 0.5 * x1 + 0.1 * x2 + 0.7 * id1),
   sd ~ I(x1)
 )
-(model_frame <- model_frame(f, n = 10))
-(data <- model_response(model_frame, link = list(identity, exp)))
+(model_fr <- model_frame(f, n = 10))
+(data <- model_response(model_fr, link = list(identity, exp)))
 
 beta0 <- c(-1, 1)
 # Structure of the model
 formula <- list(
-  mean ~ fa(sex, beta = beta0),
+  mean ~ fa(sex, beta = get("beta0")),
   sd ~ I(0)
 )
-(model_frame <- model_frame(formula, n = 10))
-(data <- model_response(model_frame, link = list(identity, exp)))
+(model_fr <- model_frame(formula, n = 10))
+(data <- model_response(model_fr, link = list(identity, exp)))
 
 formula <- list(
   mean ~ mfe(x, beta = 1:2),
-  sd ~ mfe(x1, beta = 0:1)
+  sd ~ mfe(x1, beta = 1:2)
 )
-(model_frame <- model_frame(formula, n = 10))
-(data <- model_response(model_frame, responses = 1:2))
-(data <- sim_model(formula, n = 10, response = 1:2))
+(model_fr <- model_frame(formula, n = 10))
+(data <- model_response(model_fr, link_inv = list(identity, exp), responses = 1:2))
+(data <- sim_model(formula, link_inv = list(identity, exp), n = 10, responses = 1:2))
 
 }
 \author{

@@ -4,9 +4,10 @@
 \alias{sim_model}
 \title{Simulate databases based in models}
 \usage{
-sim_model(formula = list(mean ~ I(1 + 2 * x1), sd ~ 1),
-  link_inv = list(identity, exp), generator = rnorm, n = nrow(init_data),
-  responses = c("response"), init_data = NULL, seed = NULL)
+sim_model(formula = list(mean ~ I(0), sd ~ I(1)),
+  link_inv = replicate(length(formula), identity), generator = rnorm,
+  n = nrow(init_data), responses = c("response"), init_data = NULL,
+  seed = NULL)
 }
 \arguments{
 \item{formula}{List of the parameters, indicating how they should be computed.
@@ -60,7 +61,7 @@ model_frame(formula, n = 10) \%>\% model_response()
 
 f <- list(
   mean ~ gp(list(s1), "exp_cor", list(phi = 0.05)),
-  sd ~ I(-1.6)
+  sd ~ I(1.6)
 )
 (data <- sim_model(f, n = 400))
 plot(mean ~ s1, data)

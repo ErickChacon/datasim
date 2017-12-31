@@ -31,7 +31,7 @@ details.
 # Structure of the model
 formula <- list(
   mean ~ I(age ^ 2) + fa(sex, beta = c(-1, 1)),
-  sd ~ fa(sex, beta = c(1, -1))
+  sd ~ fa(sex, beta = c(1, 2))
 )
 idata <- data.frame(s1 = 1:10)
 (datasim <- model_frame(formula, idata = idata))
