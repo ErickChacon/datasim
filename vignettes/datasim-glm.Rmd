@@ -26,7 +26,7 @@ used in the GLM framework.
 library(datasim)
 ```
 
-## Simulation for Logistic Models
+## Logistic Models
 
 To simulate datasets for GLM, we need to identify the generator that can be
 used to simulate the response variable and its parameters. In the case of a
