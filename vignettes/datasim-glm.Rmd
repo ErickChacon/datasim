@@ -1,10 +1,10 @@
 ---
-title: "Data Simulation for Linear Models"
+title: "Data Simulation for Generalized Linear Models"
 author: "Erick A. Chacon-Montalvan"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Data Simulation for Linear Models}
+  %\VignetteIndexEntry{Data Simulation for GLM}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -16,10 +16,9 @@ knitr::opts_chunk$set(comment = "#>")
 options(width = 100)
 ```
 
-In this vignette, we show how to use the three main functions of the package
-`datasim` which are `sim_data`, `model_frame` and `model_response`. This is an
-introductory tutorial and only the simulation of linear Gaussian models are
-presented.
+In this vignette, we show how to simulate datasets to fit generalized linear models.
+We will start with a logistic linear model and then we will extend to more common models
+used in the GLM framework.
 
 #### Required packages
 
