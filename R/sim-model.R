@@ -14,6 +14,8 @@
 #' @param n Number of observations to be simulated
 #' @param responses character vector indicating the names of the response variables
 #' @param init_data Initial data including some variables to not been simulated.
+#' @param lm_syntax Optional logical argument to indicate if the usual syntax of
+#' \code{formula.lm} should be used.
 #' @param effects_save Optional logical argument to save or not generated random
 #' effects
 #' @param seed Seed to be defined with function \code{set.seed} to obtain reproducible
@@ -59,7 +61,7 @@
 #' mean ~ I(0.5 * x1) : I(x2) + re(city, 1, 2),
 #' sd ~ I(1)
 #' )
-#' data <- sim_model(formula, n = 10, effects_save = TRUE)
+#' data <- sim_model(formula, n = 10)
 #'
 #' @importFrom purrr map map_chr reduce
 #' @importFrom dplyr bind_cols
@@ -71,15 +73,17 @@ sim_model <- function (formula = list(mean ~ I(0), sd ~ I(1)),
                        link_inv = replicate(length(formula), identity),
                        generator = rnorm, n = nrow(init_data),
                        responses = c("response"), init_data = NULL,
+                       lm_syntax = TRUE,
                        effects_save = FALSE,  seed = NULL) {
 
   if (!is.null(seed)) set.seed(seed)
 
   data <- model_frame(formula, n = n, idata = init_data)
 
-  if (effects_save == TRUE) {
-    data <- model_response_eff(model_frame = data, link_inv = link_inv,
-                               generator = generator, responses = responses)
+  if (lm_syntax == TRUE) {
+    data <- model_response_lm(model_frame = data, link_inv = link_inv,
+                               generator = generator, responses = responses,
+                               effects_save = effects_save)
   } else {
     data <- model_response(model_frame = data, link_inv = link_inv,
                            generator = generator, responses = responses)
@@ -318,6 +322,8 @@ model_response <- function (model_frame, formula = attr(model_frame, "formula"),
 #' parameters.
 #' @param generator Function to generate the response variables given the parameters
 #' @param responses character vector indicating the names of the response variables
+#' @param effects_save Optional logical argument to save or not generated random
+#' effects
 #' @param seed Seed to be defined with function \code{set.seed} to obtain reproducible
 #' results
 #'
@@ -328,7 +334,7 @@ model_response <- function (model_frame, formula = attr(model_frame, "formula"),
 #' sd ~ I(1)
 #' )
 #' model_frame <- model_frame(formula, n = 10)
-#' model_response_eff(model_frame)
+#' model_response_lm(model_frame)
 #'
 #'
 #'
@@ -338,10 +344,12 @@ model_response <- function (model_frame, formula = attr(model_frame, "formula"),
 #'
 #' @export
 
-model_response_eff <- function (model_frame, formula = attr(model_frame, "formula"),
+model_response_lm <- function (model_frame, formula = attr(model_frame, "formula"),
                             link_inv = replicate(length(formula), identity),
                             generator = rnorm,
-                            responses = c("response"), seed = NULL) {
+                            responses = c("response"),
+                            effects_save = FALSE,
+                            seed = NULL) {
 
   if (!is.null(seed)) set.seed(seed)
 
@@ -389,9 +397,13 @@ model_response_eff <- function (model_frame, formula = attr(model_frame, "formul
         purrr::possibly(~ setNames(.x, paste0(names(.x), ".", .y)), NULL))
       )
   param_data <- dplyr::bind_cols(param_data$x_show)
-  param_data$id <- 1:n
-  names(param_data) <- make.names(names(param_data), unique = TRUE) %>%
-    gsub("\\.+", "\\.", .)
+  if (ncol(param_data) > 0) {
+    param_data$id <- 1:n
+    names(param_data) <- make.names(names(param_data), unique = TRUE) %>%
+      gsub("\\.+", "\\.", .)
+  } else {
+    param_data <- tibble::tibble(id = 1:10)
+  }
 
   # Compute parameters in a new list
   params_ls <- list()
@@ -405,7 +417,9 @@ model_response_eff <- function (model_frame, formula = attr(model_frame, "formul
   params_ls$id <- rep(1:n, q)
 
   # Join covariates, with parameters and response variables
-  model_frame <- dplyr::left_join(model_frame, param_data, by = "id")
+  if (effects_save == TRUE) {
+    model_frame <- dplyr::left_join(model_frame, param_data, by = "id")
+  }
   model_frame <- dplyr::left_join(model_frame, tibble::as_tibble(params_ls), by = "id")
 
   return(model_frame)
