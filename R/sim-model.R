@@ -14,6 +14,8 @@
 #' @param n Number of observations to be simulated
 #' @param responses character vector indicating the names of the response variables
 #' @param init_data Initial data including some variables to not been simulated.
+#' @param effects_save Optional logical argument to save or not generated random
+#' effects
 #' @param seed Seed to be defined with function \code{set.seed} to obtain reproducible
 #' results
 #'
@@ -53,6 +55,11 @@
 #' plot(mean ~ s1, data)
 #' plot(response ~ s1, data)
 #'
+#' formula <- list(
+#' mean ~ I(0.5 * x1) : I(x2) + re(city, 1, 2),
+#' sd ~ I(1)
+#' )
+#' data <- sim_model(formula, n = 10, effects_save = TRUE)
 #'
 #' @importFrom purrr map map_chr reduce
 #' @importFrom dplyr bind_cols
@@ -63,13 +70,21 @@
 sim_model <- function (formula = list(mean ~ I(0), sd ~ I(1)),
                        link_inv = replicate(length(formula), identity),
                        generator = rnorm, n = nrow(init_data),
-                       responses = c("response"), init_data = NULL, seed = NULL) {
+                       responses = c("response"), init_data = NULL,
+                       effects_save = FALSE,  seed = NULL) {
 
   if (!is.null(seed)) set.seed(seed)
 
   data <- model_frame(formula, n = n, idata = init_data)
-  data <- model_response(model_frame = data, link_inv = link_inv, generator = generator,
-                         responses = responses)
+
+  if (effects_save == TRUE) {
+    data <- model_response_eff(model_frame = data, link_inv = link_inv,
+                               generator = generator, responses = responses)
+  } else {
+    data <- model_response(model_frame = data, link_inv = link_inv,
+                           generator = generator, responses = responses)
+
+  }
 
   return(data)
 }
@@ -106,8 +121,8 @@ sim_model <- function (formula = list(mean ~ I(0), sd ~ I(1)),
 #' (datasim <- model_frame(formula, n = 10))
 #'
 #' formula <- list(
-#'   mean ~ I(5 + 0.5 * x1 + 0.1 * x2 + 0.7 * id),
-#'   sd ~ I(x1)
+#'   mean ~ I(5) + I(0.5 * x1) + I(0.1 * x2),
+#'   sd ~ I(2) + I(x)
 #' )
 #'
 #' # Structure of the model
@@ -128,7 +143,7 @@ model_frame <- function (formula, n = nrow(idata), idata = NULL, seed = NULL) {
   if (!is.null(seed)) set.seed(seed)
 
   # Effects that can generate covariates
-  generators <- c("mfa", "fa", "gp", "mgp")
+  generators <- c("mfa", "fa", "mre", "re", "mgp", "gp")
 
   # Get effects details from formula
   effects <- tibble::tibble(
@@ -289,3 +304,109 @@ model_response <- function (model_frame, formula = attr(model_frame, "formula"),
   return(model_frame)
 }
 
+
+#' @title Simulate response variable (testing function)
+#'
+#' @description
+#' \code{function} description.
+#'
+#' @param model_frame A \code{tibble} containing all the covariates to be used.
+#' Usually this is obtained as the output of the \code{model_frame} function.
+#' @param formula An optional list of formulas to simulate the parameters of the
+#' response variables.
+#' @param link_inv A list of function representing the inverse link function for the
+#' parameters.
+#' @param generator Function to generate the response variables given the parameters
+#' @param responses character vector indicating the names of the response variables
+#' @param seed Seed to be defined with function \code{set.seed} to obtain reproducible
+#' results
+#'
+#' @examples
+#'
+#' formula <- list(
+#' mean ~ I(0.5 * x1) : I(x2) + re(city, 1, 2),
+#' sd ~ I(1)
+#' )
+#' model_frame <- model_frame(formula, n = 10)
+#' model_response_eff(model_frame)
+#'
+#'
+#'
+#' @importFrom tibble tibble as_tibble
+#' @importFrom purrr map map_chr map2
+#' @importFrom dplyr left_join
+#'
+#' @export
+
+model_response_eff <- function (model_frame, formula = attr(model_frame, "formula"),
+                            link_inv = replicate(length(formula), identity),
+                            generator = rnorm,
+                            responses = c("response"), seed = NULL) {
+
+  if (!is.null(seed)) set.seed(seed)
+
+  # Get dimensions and parameters
+  n <- nrow(model_frame)
+  q <- length(responses)
+  params <- purrr::map_chr(formula, ~ all.vars(.)[1])
+  nterms <- purrr::map(formula, ~ length(attr(terms(.), "variables")) - 2)
+
+  # Get effects details from formula
+  effects <- tibble::tibble(
+    params = rep(params, nterms),
+    call = purrr::map(formula, ~ as.list(attr(terms(.), "variables"))) %>%
+      purrr::map(~ .[c(-1, -2)]) %>%
+      purrr::reduce(c),
+    call_str = format(call),
+    id = 1:length(call),
+    covs = purrr::map(call, all.vars),
+    type = purrr::map_chr(call, ~ as.character(.x[[1]])),
+    ncovs = purrr::map_int(covs, length)
+    )
+
+  # Remove intercepts from formula
+  param_form <- effects %>%
+    dplyr::filter(ncovs == 0) %>%
+    dplyr::left_join(tibble::tibble(params), ., by = "params") %>%
+    dplyr::mutate(
+      offset = purrr::map_dbl(call, ~ ifelse(is.null(.), 0, eval(.))),
+      update_formula = purrr::map(call, ~ substitute( ~ . - x, list(x = .))),
+      formula_new = purrr::map2(formula, update_formula, ~ update(.x[-2], .y)),
+      x = purrr::map(formula_new, ~ model.frame(., model_frame)),
+      x_mat = purrr::map2(formula_new, x, ~ model.matrix(.x, .y)),
+      value = purrr::map2(x_mat, offset, ~ rowSums(.x) - 1 + .y)
+      )
+
+  # Select effects to exported
+  generators2save <- c("mre", "re", "mgp", "gp")
+  param_data <- param_form %>%
+    dplyr::mutate(
+      eff_show = purrr::map(params,
+        ~ subset(effects, params == . & type %in% generators2save,
+                 select = call_str, drop = TRUE)),
+      x_show = purrr::map2(x, eff_show, ~ dplyr::select(.x, .y)),
+      x_show = purrr::map2(x_show, params,
+        purrr::possibly(~ setNames(.x, paste0(names(.x), ".", .y)), NULL))
+      )
+  param_data <- dplyr::bind_cols(param_data$x_show)
+  param_data$id <- 1:n
+  names(param_data) <- make.names(names(param_data), unique = TRUE) %>%
+    gsub("\\.+", "\\.", .)
+
+  # Compute parameters in a new list
+  params_ls <- list()
+  params_ls[params] <- param_form$value %>%
+    purrr::map2(link_inv, ~ .y(.x))
+
+  # Simulate response variables on the list
+  response <- ifelse(q > 1, "response", responses)
+  params_ls[response] <- list(do.call(generator, c(n = n * q, params_ls[params])))
+  if (q > 1) params_ls$response_label <- rep(responses, each = n)
+  params_ls$id <- rep(1:n, q)
+
+  # Join covariates, with parameters and response variables
+  model_frame <- dplyr::left_join(model_frame, param_data, by = "id")
+  model_frame <- dplyr::left_join(model_frame, tibble::as_tibble(params_ls), by = "id")
+
+  return(model_frame)
+}

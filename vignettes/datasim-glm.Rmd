@@ -42,6 +42,10 @@ f <- list(
   )
 ```
 
+In this formula, a linear effect on `x1` and a factor effect on `sex` are
+included on the linear predictor of the `prob` parameter, while the `size` is equal
+to 1 to obtain a Bernoulli density.
+
 The data for our model can be simulated with the function `sim_model`, which requires
 the inverse link function for each parameter through the argument `link_inv`, the
 `generator` and the sample size `n`. In the case of a logistic model model,

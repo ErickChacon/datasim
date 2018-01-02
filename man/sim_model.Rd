@@ -7,7 +7,7 @@
 sim_model(formula = list(mean ~ I(0), sd ~ I(1)),
   link_inv = replicate(length(formula), identity), generator = rnorm,
   n = nrow(init_data), responses = c("response"), init_data = NULL,
-  seed = NULL)
+  effects_save = FALSE, seed = NULL)
 }
 \arguments{
 \item{formula}{List of the parameters, indicating how they should be computed.
@@ -24,6 +24,9 @@ parameters.}
 \item{responses}{character vector indicating the names of the response variables}
 
 \item{init_data}{Initial data including some variables to not been simulated.}
+
+\item{effects_save}{Optional logical argument to save or not generated random
+effects}
 
 \item{seed}{Seed to be defined with function \code{set.seed} to obtain reproducible
 results}
@@ -67,6 +70,11 @@ f <- list(
 plot(mean ~ s1, data)
 plot(response ~ s1, data)
 
+formula <- list(
+mean ~ I(0.5 * x1) : I(x2) + re(city, 1, 2),
+sd ~ I(1)
+)
+data <- sim_model(formula, n = 10, effects_save = TRUE)
 
 }
 \author{

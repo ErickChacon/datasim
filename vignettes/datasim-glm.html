@@ -79,13 +79,14 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <h4>Required packages</h4>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(datasim)</code></pre></div>
 </div>
-<div id="simulation-for-logistic-models" class="section level2">
-<h2>Simulation for Logistic Models</h2>
+<div id="logistic-models" class="section level2">
+<h2>Logistic Models</h2>
 <p>To simulate datasets for GLM, we need to identify the generator that can be used to simulate the response variable and its parameters. In the case of a logistic model, the generator is the <code>rbinom</code> function with parameters <code>size</code> and <code>prob</code>. We need to define a list of formulas specifying the type of effect that are included in the linear predictor of each parameter. For example, this list can be defined as follows.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">f &lt;-<span class="st"> </span><span class="kw">list</span>(
   prob ~<span class="st"> </span><span class="kw">I</span>(<span class="dv">1</span> *<span class="st"> </span>x1) +<span class="st"> </span><span class="kw">fa</span>(sex, <span class="dt">beta =</span> <span class="kw">c</span>(<span class="dv">0</span>, -<span class="dv">1</span>), <span class="dt">labels =</span> <span class="kw">c</span>(<span class="st">&quot;male&quot;</span>, <span class="st">&quot;female&quot;</span>)),
   size ~<span class="st"> </span><span class="kw">I</span>(<span class="dv">1</span>)
   )</code></pre></div>
+<p>In this formula, a linear effect on <code>x1</code> and a factor effect on <code>sex</code> are included on the linear predictor of the <code>prob</code> parameter, while the <code>size</code> is equal to 1 to obtain a Bernoulli density.</p>
 <p>The data for our model can be simulated with the function <code>sim_model</code>, which requires the inverse link function for each parameter through the argument <code>link_inv</code>, the <code>generator</code> and the sample size <code>n</code>. In the case of a logistic model model, the inverse link function for <code>prob</code> is the <code>logistic</code> function and identity function for <code>size</code>.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">data_model &lt;-<span class="st"> </span><span class="kw">sim_model</span>(<span class="dt">formula =</span> f,
                         <span class="dt">link_inv =</span> <span class="kw">list</span>(psych::logistic, identity),
@@ -106,83 +107,83 @@ code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Inf
 <tbody>
 <tr class="odd">
 <td align="right">1</td>
-<td align="right">0.3305244</td>
+<td align="right">0.5776773</td>
 <td align="left">female</td>
-<td align="right">0.3386143</td>
+<td align="right">0.3959611</td>
 <td align="right">1</td>
 <td align="right">0</td>
 </tr>
 <tr class="even">
 <td align="right">2</td>
-<td align="right">0.6983527</td>
-<td align="left">female</td>
-<td align="right">0.4251548</td>
+<td align="right">0.1629269</td>
+<td align="left">male</td>
+<td align="right">0.5406419</td>
 <td align="right">1</td>
 <td align="right">1</td>
 </tr>
 <tr class="odd">
 <td align="right">3</td>
-<td align="right">-0.3107522</td>
+<td align="right">0.3123605</td>
 <td align="left">male</td>
-<td align="right">0.4229311</td>
+<td align="right">0.5774613</td>
 <td align="right">1</td>
 <td align="right">0</td>
 </tr>
 <tr class="even">
 <td align="right">4</td>
-<td align="right">0.4134115</td>
-<td align="left">female</td>
-<td align="right">0.3574180</td>
+<td align="right">-0.2105177</td>
+<td align="left">male</td>
+<td align="right">0.4475641</td>
 <td align="right">1</td>
 <td align="right">0</td>
 </tr>
 <tr class="odd">
 <td align="right">5</td>
-<td align="right">0.3400264</td>
-<td align="left">female</td>
-<td align="right">0.3407455</td>
+<td align="right">0.1890841</td>
+<td align="left">male</td>
+<td align="right">0.5471307</td>
 <td align="right">1</td>
-<td align="right">1</td>
+<td align="right">0</td>
 </tr>
 <tr class="even">
 <td align="right">6</td>
-<td align="right">-1.7602353</td>
+<td align="right">0.3212180</td>
 <td align="left">male</td>
-<td align="right">0.1467609</td>
+<td align="right">0.5796211</td>
 <td align="right">1</td>
 <td align="right">0</td>
 </tr>
 <tr class="odd">
 <td align="right">7</td>
-<td align="right">0.1561004</td>
-<td align="left">female</td>
-<td align="right">0.3007141</td>
+<td align="right">-0.3929972</td>
+<td align="left">male</td>
+<td align="right">0.4029960</td>
 <td align="right">1</td>
 <td align="right">0</td>
 </tr>
 <tr class="even">
 <td align="right">8</td>
-<td align="right">-1.1878301</td>
-<td align="left">female</td>
-<td align="right">0.1008487</td>
+<td align="right">-0.5103656</td>
+<td align="left">male</td>
+<td align="right">0.3751078</td>
 <td align="right">1</td>
-<td align="right">0</td>
+<td align="right">1</td>
 </tr>
 <tr class="odd">
 <td align="right">9</td>
-<td align="right">1.9446244</td>
-<td align="left">male</td>
-<td align="right">0.8748593</td>
+<td align="right">-0.0421915</td>
+<td align="left">female</td>
+<td align="right">0.2607274</td>
 <td align="right">1</td>
-<td align="right">1</td>
+<td align="right">0</td>
 </tr>
 <tr class="even">
 <td align="right">10</td>
-<td align="right">-1.2073568</td>
+<td align="right">0.5531037</td>
 <td align="left">male</td>
-<td align="right">0.2301691</td>
+<td align="right">0.6348554</td>
 <td align="right">1</td>
-<td align="right">0</td>
+<td align="right">1</td>
 </tr>
 </tbody>
 </table>
@@ -202,18 +203,18 @@ logis_sum &lt;-<span class="st"> </span><span class="kw">confint</span>(logis)</
 <tbody>
 <tr class="odd">
 <td align="left">(Intercept)</td>
-<td align="right">-1.2168296</td>
-<td align="right">0.2231519</td>
+<td align="right">-0.8774136</td>
+<td align="right">0.2710904</td>
 </tr>
 <tr class="even">
 <td align="left">x1</td>
-<td align="right">0.9962294</td>
-<td align="right">2.6331713</td>
+<td align="right">0.5171402</td>
+<td align="right">1.7655220</td>
 </tr>
 <tr class="odd">
 <td align="left">sexfemale</td>
-<td align="right">-1.4747889</td>
-<td align="right">0.5497694</td>
+<td align="right">-2.0371303</td>
+<td align="right">-0.1324797</td>
 </tr>
 </tbody>
 </table>

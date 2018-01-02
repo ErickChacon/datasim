@@ -38,8 +38,8 @@ idata <- data.frame(s1 = 1:10)
 (datasim <- model_frame(formula, n = 10))
 
 formula <- list(
-  mean ~ I(5 + 0.5 * x1 + 0.1 * x2 + 0.7 * id),
-  sd ~ I(x1)
+  mean ~ I(5) + I(0.5 * x1) + I(0.1 * x2),
+  sd ~ I(2) + I(x)
 )
 
 # Structure of the model
