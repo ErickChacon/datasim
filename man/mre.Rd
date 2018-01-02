@@ -31,21 +31,22 @@ details.
 \examples{
 
 Sigma <- matrix(c(1, 0.8, 0.5, 0.8, 1, 0.5, 0.5, 0.5, 1), nrow = 3)
-(x <- mre(groups = 300, size = 300))
+(x <- mre(groups = 300, sigma = Sigma, size = 300))
 (effect <- mre(x, sigma = Sigma))
 
 id_uni <- match(unique(x), x)
 effect_mat <- matrix(effect, ncol = nrow(Sigma))[id_uni, ]
 cov(effect_mat)
 
-(x <- mre(groups = 300, size = 3000))
+(x <- mre(groups = 300, sigma = matrix(c(2, 1.5, 1.5, 2), nrow = 2), size = 3000))
 (effect <- mre(x, sigma = matrix(c(2, 1.5, 1.5, 2), nrow = 2)))
 
 id_uni <- match(unique(x), x)
 effect_mat <- matrix(effect, ncol = 2)[id_uni, ]
 cov(effect_mat)
 
-(x <- mre(groups = 10, size = 10, replace = FALSE))
+(x <- mre(groups = 10, sigma = matrix(c(2, 1.5, 1.5, 2), nrow = 2),
+  size = 10, replace = FALSE))
 (effect <- mre(x, sigma = matrix(c(2, 1.5, 1.5, 2), nrow = 2)))
 
 id_uni <- match(unique(x), x)

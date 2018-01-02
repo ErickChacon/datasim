@@ -46,6 +46,7 @@ fa <- function (x, beta, labels = 1:length(beta), size = NULL) {
 #' @param groups character vector to name the \code{levels} of \code{x} or a numeric
 #' value indicating the number of groups of \code{x}
 #' @param size numeric value to simulate the covariate \code{x}
+#' @param q number of response varables to replicate
 #' @param replace An optional argument to simulate an independent random effect with
 #' one repetition (e.g. \code{mre(groups = 100, size = 100, replace = FALSE)})
 #'
@@ -61,15 +62,23 @@ fa <- function (x, beta, labels = 1:length(beta), size = NULL) {
 #' (x <- re(groups = 15, size = 15, replace = FALSE))
 #' re(x, sigma = 1)
 #'
+#' (x <- re(groups = 2, size = 5, q = 2))
+#' re(x, sigma = 10)
+#'
+#' (x <- 1:10)
+#' re(x, sigma = 10)
+#'
 #' @export
-re <- function (x, sigma, groups, size = NULL, replace = TRUE) {
+re <- function (x, sigma, groups, size = NULL, q = 1, replace = TRUE) {
   if (!is.null(size)) {
     if (is.numeric(groups) & length(groups) == 1) {
       groups <- seq_len(groups)
       ngroups <- length(groups)
     }
-    output <- factor(sample(groups, size = size, replace = replace), levels = groups)
+    output <- rep(sample(groups, size = size, replace = replace), q) %>%
+      factor(levels = groups)
   } else {
+    if (!is.factor(x)) x <- factor(x)
     groups <- levels(x)
     beta <- rnorm(length(groups), 0, sigma)
     names(beta) <- groups

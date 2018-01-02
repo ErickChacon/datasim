@@ -58,8 +58,8 @@ formula <- list(
   sd ~ mfe(x1, beta = 1:2)
 )
 (model_fr <- model_frame(formula, n = 10))
-(data <- model_response(model_fr, link_inv = list(identity, exp), responses = 1:2))
-(data <- sim_model(formula, link_inv = list(identity, exp), n = 10, responses = 1:2))
+#(data <- model_response(model_fr, link_inv = list(identity, exp), responses = 1:2))
+#(data <- sim_model(formula, link_inv = list(identity, exp), n = 10, responses = 1:2))
 
 }
 \author{

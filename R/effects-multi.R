@@ -30,9 +30,13 @@
 #'
 #' @export
 mfa <- function (x, beta, labels = 1:nrow(beta), size = NULL) {
+  q <- ncol(beta)
   if (!is.null(size)) {
-    output <- factor(sample(labels, size = size, replace = TRUE), levels = labels)
+    output <- rep(sample(labels, size = size, replace = TRUE), q) %>%
+      factor(levels = labels)
   } else {
+    if (!is.factor(x)) x <- factor(x)
+    x <- x[1:(length(x) / q)]
     if (length(labels) > 1) {
       design <- model.matrix(~ -1 + x, data.frame(x))
     } else {
@@ -94,21 +98,22 @@ mfe <- function (x, beta) {
 #' @examples
 #'
 #' Sigma <- matrix(c(1, 0.8, 0.5, 0.8, 1, 0.5, 0.5, 0.5, 1), nrow = 3)
-#' (x <- mre(groups = 300, size = 300))
+#' (x <- mre(groups = 300, sigma = Sigma, size = 300))
 #' (effect <- mre(x, sigma = Sigma))
 #'
 #' id_uni <- match(unique(x), x)
 #' effect_mat <- matrix(effect, ncol = nrow(Sigma))[id_uni, ]
 #' cov(effect_mat)
 #'
-#' (x <- mre(groups = 300, size = 3000))
+#' (x <- mre(groups = 300, sigma = matrix(c(2, 1.5, 1.5, 2), nrow = 2), size = 3000))
 #' (effect <- mre(x, sigma = matrix(c(2, 1.5, 1.5, 2), nrow = 2)))
 #'
 #' id_uni <- match(unique(x), x)
 #' effect_mat <- matrix(effect, ncol = 2)[id_uni, ]
 #' cov(effect_mat)
 #'
-#' (x <- mre(groups = 10, size = 10, replace = FALSE))
+#' (x <- mre(groups = 10, sigma = matrix(c(2, 1.5, 1.5, 2), nrow = 2),
+#'   size = 10, replace = FALSE))
 #' (effect <- mre(x, sigma = matrix(c(2, 1.5, 1.5, 2), nrow = 2)))
 #'
 #' id_uni <- match(unique(x), x)
@@ -117,13 +122,16 @@ mfe <- function (x, beta) {
 #'
 #' @export
 mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
+  q <- nrow(sigma)
   if (!is.null(size)) {
     if (is.numeric(groups) & length(groups) == 1) {
       groups <- seq_len(groups)
       ngroups <- length(groups)
     }
-    output <- factor(sample(groups, size = size, replace = replace), levels = groups)
+    output <- rep(sample(groups, size = size, replace = replace), q) %>%
+      factor(levels = groups)
   } else {
+    x <- x[1:(length(x) / q)]
     groups <- levels(x)
     right <- kronecker(chol(sigma), diag(length(groups)))
     beta <- crossprod(right, rnorm(length(groups) * nrow(sigma)))
@@ -134,6 +142,29 @@ mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
   }
   return(output)
 }
+
+# #' @export
+# mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
+#   q <- nrow(sigma)
+#   if (!is.null(size)) {
+#     if (is.numeric(groups) & length(groups) == 1) {
+#       groups <- seq_len(groups)
+#       ngroups <- length(groups)
+#     }
+#     output <- rep(sample(groups, size = size, replace = replace), q) %>%
+#       factor(levels = groups)
+#   } else {
+#     x <- x[1:(length(x) / q)]
+#     groups <- levels(x)
+#     right <- kronecker(chol(sigma), diag(length(groups)))
+#     beta <- crossprod(right, rnorm(length(groups) * nrow(sigma)))
+#     beta <- matrix(beta, nrow = length(groups))
+#
+#     design <- model.matrix(~ -1 + x, data.frame(x))
+#     output <- as.numeric(design %*% beta)
+#   }
+#   return(output)
+# }
 
 
 #' @title Simulate a Multivariate Gaussian process

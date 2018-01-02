@@ -4,7 +4,7 @@
 \alias{re}
 \title{Univariate random effects}
 \usage{
-re(x, sigma, groups, size = NULL, replace = TRUE)
+re(x, sigma, groups, size = NULL, q = 1, replace = TRUE)
 }
 \arguments{
 \item{x}{factor vector to evaluate the random effect}
@@ -15,6 +15,8 @@ re(x, sigma, groups, size = NULL, replace = TRUE)
 value indicating the number of groups of \code{x}}
 
 \item{size}{numeric value to simulate the covariate \code{x}}
+
+\item{q}{number of response varables to replicate}
 
 \item{replace}{An optional argument to simulate an independent random effect with
 one repetition (e.g. \code{mre(groups = 100, size = 100, replace = FALSE)})}
@@ -35,6 +37,12 @@ re(x, sigma = 10)
 
 (x <- re(groups = 15, size = 15, replace = FALSE))
 re(x, sigma = 1)
+
+(x <- re(groups = 2, size = 5, q = 2))
+re(x, sigma = 10)
+
+(x <- 1:10)
+re(x, sigma = 10)
 
 }
 \author{

@@ -6,8 +6,8 @@
 \usage{
 sim_model(formula = list(mean ~ I(0), sd ~ I(1)),
   link_inv = replicate(length(formula), identity), generator = rnorm,
-  n = nrow(init_data), responses = c("response"), init_data = NULL,
-  lm_syntax = TRUE, effects_save = FALSE, seed = NULL)
+  n = nrow(init_data), responses = 1, init_data = NULL,
+  lm_syntax = TRUE, effects_save = TRUE, seed = NULL)
 }
 \arguments{
 \item{formula}{List of the parameters, indicating how they should be computed.

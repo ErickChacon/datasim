@@ -4,7 +4,8 @@
 \alias{model_frame}
 \title{Simulate covariates based on model formula}
 \usage{
-model_frame(formula, n = nrow(idata), idata = NULL, seed = NULL)
+model_frame(formula, n = nrow(idata)/q, idata = NULL, q = 1,
+  seed = NULL)
 }
 \arguments{
 \item{formula}{List of the parameters, indicating how they should be computed.
@@ -14,6 +15,8 @@ that it included the coefficients and link function explicitly.}
 \item{n}{Number of observations to be simulated}
 
 \item{idata}{Initial data including some variables to not been simulated.}
+
+\item{q}{number of response variables}
 
 \item{seed}{Seed to be defined with function \code{set.seed} to obtain reproducible}
 }
