@@ -18,5 +18,6 @@ Imports:
 RoxygenNote: 6.0.1
 Suggests: knitr,
     rmarkdown,
-    psych
+    psych,
+    ggplot2
 VignetteBuilder: knitr

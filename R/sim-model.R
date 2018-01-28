@@ -376,7 +376,10 @@ model_response_lm <- function (model_frame, formula = attr(model_frame, "formula
     call = purrr::map(formula, ~ as.list(attr(terms(.), "variables"))) %>%
       purrr::map(~ .[c(-1, -2)]) %>%
       purrr::reduce(c),
-    call_str = format(call),
+    # call_str = format(call),
+    call_str = purrr::map_chr(call, ~ deparse(., width.cutoff = 300)),
+    # call_str = purrr::map(formula, ~ labels(terms(.))) %>%
+    #   purrr::reduce(c),
     id = 1:length(call),
     covs = purrr::map(call, all.vars),
     type = purrr::map_chr(call, ~ as.character(.x[[1]])),
@@ -397,7 +400,7 @@ model_response_lm <- function (model_frame, formula = attr(model_frame, "formula
         ~ if(ncol(.x) > 1) rowSums(.x) - 1 + .y else .y)
       )
 
-  # Select effects to exported
+  # Select effects to be exported
   generators2save <- c("mre", "re", "mgp", "gp")
   param_data <- param_form %>%
     dplyr::mutate(

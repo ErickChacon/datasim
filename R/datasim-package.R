@@ -19,7 +19,8 @@ if(getRversion() >= "2.15.1") utils::globalVariables(
   c(".",
     "type", "type_order", "covs", "ncovs",
     "update_formula", "formula_new",
-    "x", "x_mat", "offset", "eff_show", "x_show"
+    "x", "x_mat", "offset", "eff_show", "x_show",
+    "id"
     )
   )
 

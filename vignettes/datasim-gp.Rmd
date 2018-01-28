@@ -1,0 +1,124 @@
+---
+title: "Data Simulation for Linear Models"
+author: "Erick A. Chacon-Montalvan"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Data Simulation for Linear Models}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align = "center")
+knitr::opts_chunk$set(fig.width = 6, fig.height = 4)
+knitr::opts_chunk$set(comment = "#>")
+options(width = 100)
+```
+
+In this vignette, we show how to use the three main functions of the package
+`datasim` which are `sim_data`, `model_frame` and `model_response`. This is an
+introductory tutorial and only the simulation of linear Gaussian models are
+presented.
+
+#### Required packages
+
+```{r}
+library(datasim)
+library(ggplot2)
+```
+
+## Linear Model
+
+First, we need to define a list of formulas specifying the type of effect that are
+included in the linear predictor of each parameter. For example, this list can be
+defined as follows.
+
+```{r}
+f <- list(
+  mean ~ I(5) +
+    gp(list(s1, s2), cor.model = "exp_cor", cor.params = list(phi = 0.02)),
+  sd ~ I(1)
+  )
+```
+
+In this formula, it can be seen that an intercept, a linear effect on `x1` and a
+factor effect on `sex` are being included on the `mean` parameter, while the
+standard deviation `sd` is constant. The simulation of the dataset can be done with
+the function `sim_model`, which implements the simulation in two parts:
+
+### Simulate the dataset
+
+The data for our model can be simulated with the function `sim_model`.
+The two main arguments of `sim_model` function, when working with linear Gaussian
+models, are the `formula` and the sample size `n`.
+In order to obtain a reproducible dataset, a seed must be defined
+with the function `set.seed` or by using the argument `seed` in `sim_model`.
+
+```{r}
+data_model <- sim_model(formula = f, n = 500, seed = 1)
+```
+
+The first 10 rows of the generated dataset looks as follows:
+```{r, echo = FALSE, results = 'asis'}
+knitr::kable(head(data_model, 10))
+```
+
+it contains an unique `id` for each individual, all the predictors included in the
+`formula` (i.e. `x1` and `sex`), the parameters (`mean` and `sd`), and the simulated
+`response` variable.
+
+### Visualize
+
+```{r}
+ggplot(data_model, aes(s1, s2)) +
+  geom_point(aes(col = gp.list.mean)) +
+  scale_colour_distiller(palette = "RdYlBu")
+```
+
+
+### Simulate predictors only
+
+`sim_model` simulate the entire dataset. If only predictors want to be simulated to
+have more control, the function `model_frame` can be used.  The two main arguments
+of this function are the `formula` and the sample size `n`.
+
+```{r}
+data_frame <- model_frame(formula = f, n = 100, seed = 1)
+```
+The first 10 rows of the generated dataset looks as follows. As expected, only the
+covariates are simulated.
+
+```{r, echo = FALSE, results = 'asis'}
+knitr::kable(head(data_frame, 10))
+```
+
+### Simulate the response variable only
+
+If the data is already obtained, we can simulate the response variable using the
+function `model_response`.
+
+```{r}
+data_frame <- model_response(data_frame, formula = f)
+```
+
+The first 10 rows of the generated dataset looks as follows. As expected, only the
+covariates are simulated.
+
+```{r, echo = FALSE, results = 'asis'}
+knitr::kable(head(data_frame, 10))
+```
+
+### Simulate dataset step by step
+
+Notice that the same results can be obtained using the either `sim_model` alone or
+`model_frame` and `model_response` together.
+
+```{r}
+data_model <- model_frame(f, n = 100, seed = 1) %>%
+  model_response()
+```
+
+```{r, echo = FALSE, results = 'asis'}
+knitr::kable(head(data_model, 10))
+```
