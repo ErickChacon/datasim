@@ -66,13 +66,18 @@ mfa <- function (x, beta, labels = 1:nrow(beta), size = NULL) {
 #'
 #' @examples
 #'
-#' mfe(x = rnorm(10), beta = c(0.1, 0, 1))
+#' mfe(x = rep(rnorm(5), 3), beta = c(0.1, 0, 1))
 #'
-#' mfe(x = rnorm(10), beta = rep(10, 3))
+#' mfe(x = rep(rnorm(5), 3), beta = rep(10, 3))
 #'
 #' @export
 mfe <- function (x, beta) {
-  as.numeric(matrix(x) %*% matrix(beta, nrow = 1))
+  np <- length(x)
+  p <- length(beta)
+  n <- np / p
+  output <- x * rep(beta, each = n)
+  # as.numeric(matrix(x) %*% matrix(beta, nrow = 1))
+  return(output)
 }
 
 #' @title Multivariate random effects
@@ -132,6 +137,7 @@ mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
       factor(levels = groups)
   } else {
     x <- x[1:(length(x) / q)]
+    if (!is.factor(x)) x <- factor(x)
     groups <- levels(x)
     right <- kronecker(chol(sigma), diag(length(groups)))
     beta <- crossprod(right, rnorm(length(groups) * nrow(sigma)))

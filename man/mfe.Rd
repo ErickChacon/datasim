@@ -24,9 +24,9 @@ details.
 }
 \examples{
 
-mfe(x = rnorm(10), beta = c(0.1, 0, 1))
+mfe(x = rep(rnorm(5), 3), beta = c(0.1, 0, 1))
 
-mfe(x = rnorm(10), beta = rep(10, 3))
+mfe(x = rep(rnorm(5), 3), beta = rep(10, 3))
 
 }
 \author{
