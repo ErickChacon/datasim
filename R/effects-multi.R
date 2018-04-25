@@ -183,8 +183,8 @@ mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
 #' @details
 #' details.
 #'
-#' @param coords A list of coordinates
-#' @param variance A qxq cross-covariance matrix.
+#' @param coords A list of coordinates.
+#' @param variance A qxq cross-covariance matrix Sigma such as \code{A=chol(Sigma)}.
 #' @param cor.model A character or function indicating the covariance function that
 #' should be used to compute the correlation matrix
 #' @param cor.params List of lists indicating the parameters for each response.
@@ -198,8 +198,8 @@ mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
 #'
 #' # Generate coordinates
 #' N <- 100
-#' s1 <- 2 * runif(N)
-#' s2 <- 2 * runif(N)
+#' s1 <- rep(2 * runif(N), 2)
+#' s2 <- rep(2 * runif(N), 2)
 #'
 #' # Covariance parameters
 #' q <- 2
@@ -221,29 +221,29 @@ mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
 #' plot(s1, s2, cex = y1, col = 2)
 #' points(s1, s2, cex = y2, col = 3)
 #'
-#' (x <- mgp(list(s1 = NA, s2 = NA), size = 100))
+#' variance = matrix(c(2, 1.5, 1.5, 2), nrow = 2)
+#' (x <- mgp(list(s1 = NA, s2 = NA), variance, size = 100))
 #' (s1 <- x[[1]])
 #' (s2 <- x[[2]])
 #' cor.model <- "exp_cor"
 #' cor.params <- list(list(phi = 0.05), list(phi = 0.07))
-#' variance = matrix(c(2, 1.5, 1.5, 2), nrow = 2)
 #' (out <- mgp(list(s1, s2), variance, cor.model, cor.params))
 #' out_mat <- matrix(out, ncol = 2)
 #' plot(out_mat)
 #' cov(out_mat)
 #'
-#' (x <- mgp(list(s1 = NA), size = 10))
+#' variance <- matrix(c(1, 0.8, 0.5, 0.8, 1, 0.5, 0.5, 0.5, 1), nrow = 3)
+#' (x <- mgp(list(s1 = NA), variance, size = 10))
 #' (s1 <- x[[1]])
 #' cor.model <- "exp_cor"
 #' cor.params <- list(list(phi = 0.05), list(phi = 0.07), list(phi = 1))
-#' variance <- matrix(c(1, 0.8, 0.5, 0.8, 1, 0.5, 0.5, 0.5, 1), nrow = 3)
 #' mgp(list(s1), variance = variance, cor.model = cor.model, cor.params = cor.params)
 #'
-#' (x <- mgp(list(s1 = NA), size = 100))
+#' variance <- matrix(c(1, 0.8, 0.5, 0.8, 1, 0.5, 0.5, 0.5, 1), nrow = 3)
+#' (x <- mgp(list(s1 = NA), variance, size = 100))
 #' (s1 <- x[[1]])
 #' cor.model <- "exp_cor"
 #' cor.params <- list(list(phi = 0.05), list(phi = 0.07), list(phi = 1))
-#' variance <- matrix(c(1, 0.8, 0.5, 0.8, 1, 0.5, 0.5, 0.5, 1), nrow = 3)
 #' mgp(list(s1), variance, cor.model, cor.params)
 #'
 #' @importFrom stats dist runif rnorm model.matrix
@@ -252,13 +252,15 @@ mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
 #' @export
 
 mgp <- function (coords, variance, cor.model, cor.params, size = NULL) {
+  q <- nrow(variance)
   if (!is.null(size)) {
     ncoords <- purrr::map(coords, is.na) %>% do.call(sum, .)
-    output <- replicate(ncoords, list(stats::runif(size)))
+    output <- replicate(ncoords, list(rep(stats::runif(size), q)))
   } else {
     coords <- do.call(cbind, coords)
+    coords <- coords[1:(nrow(coords) / q), , drop = FALSE]
     n <- nrow(coords)
-    q <- nrow(variance)
+    # q <- nrow(variance)
     distance <- as.matrix(dist(coords))
     rights <- purrr::map(cor.params, ~ chol(do.call(cor.model, c(list(distance), .))))
 
