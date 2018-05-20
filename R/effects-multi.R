@@ -189,6 +189,7 @@ mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
 #' should be used to compute the correlation matrix
 #' @param cor.params List of lists indicating the parameters for each response.
 #' @param size numeric value to simulate the covariate \code{x}
+#' @param range range on the coordinates of the Gaussian process
 #'
 #' @return A vector of the realization of the Gaussian Process
 #'
@@ -251,11 +252,11 @@ mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
 #'
 #' @export
 
-mgp <- function (coords, variance, cor.model, cor.params, size = NULL) {
+mgp <- function (coords, variance, cor.model, cor.params, size = NULL, range = 1) {
   q <- nrow(variance)
   if (!is.null(size)) {
     ncoords <- purrr::map(coords, is.na) %>% do.call(sum, .)
-    output <- replicate(ncoords, list(rep(stats::runif(size), q)))
+    output <- replicate(ncoords, list(rep(range * stats::runif(size), q)))
   } else {
     coords <- do.call(cbind, coords)
     coords <- coords[1:(nrow(coords) / q), , drop = FALSE]
