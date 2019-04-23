@@ -1,43 +1,61 @@
 
-#' @title Multivariate factor effects
+#' @title Multivariate Factor Effects
 #'
 #' @description
-#' \code{mfa} creates a multivariate factor effect given a factor.
+#' \code{mfa} handles the evaluation of multivariate factor effects with two
+#' behaviours. It evaluates the multivariate effects applied to the replicated factor
+#' \code{x} if \code{size == NULL} or simulates the replicated factor \code{x} if
+#' \code{size} is provided.
 #'
 #' @details
-#' \code{mfa} has two behaviours. If \code{size == NULL}, it evaluate the effects
-#' applied to the argument \code{x}; otherwise, it generates a factor \code{x}.
+#' Considering \eqn{x*} the \eqn{n}-length factor under study with \eqn{k} levels and
+#' \eqn{X} the associated \eqn{nxk} design matrix with dummy variables corresponding
+#' to each level of the factor, the returning multivariate effect is
+#' \deqn{vec(XB),}
+#' where \eqn{B} is a \eqn{kxq} matrix of regression coefficients and \eqn{vec(.)}
+#' represents a vectorization by columns of the provided matrix.
 #'
-#' @param x factor vector to evaluate the effect
-#' @param beta matrix of the effects for each level of \code{x}
-#' @param labels character vector to name the \code{levels} of \code{x}
-#' @param size numeric value to simulate the covariate \code{x}
+#' @param x A replicated covariate factor of length \eqn{nq} to evaluate the
+#' multivariate effects. It is a \eqn{q} times replicated vector of \eqn{x*}. If
+#' \code{size != NULL}, \code{x} is the output of the function.
+#' @param beta A \eqn{kxq} matrix B of regression coefficients representing the effects
+#' for each level of \code{x} on the response variables. Each column represents the
+#' effect to each response variable.
+#' @param levels A character vector of length \eqn{k} to name the \code{levels} of the
+#' factor \code{x}.
+#' @param size A numeric value \eqn{n} representing the number of units, it is used to
+#' simulate the covariate \code{x}. In case \code{size == NULL}, \code{mfa} evaluates
+#' the effects.
 #'
-#' @return return.
+#' @return A simulated replicated factor \eqn{x} in case \code{size} is provided;
+#' otherwise, a \eqn{nq}-length numeric vector of the evaluated multivariate
+#' effects.
 #'
-#' @author Erick A. Chacon-Montalvan
+#' @author Erick A. Chacón-Montalván
 #'
 #' @examples
-#'
-#' (x <- mfa(beta = cbind(1:2, 2:3, 0:1), size = 10))
+#' # Different effects for each response.
+#' (x <- mfa(beta = cbind(1:2, 2:3, 0:1), levels = c("F", "M"), size = 10))
 #' mfa(x, beta = cbind(1:2, 2:3, 0:1))
 #'
+#' # Same effects for each response.
 #' (x <- mfa(beta = replicate(3, 0:2), size = 10))
 #' mfa(x, beta = replicate(3, 0:2))
 #'
+#' # Differrent intercepts for each response.
 #' (x <- mfa(beta = cbind(1, 2, 0), size = 10))
 #' mfa(x, beta = cbind(1, 2, 0))
 #'
 #' @export
-mfa <- function (x, beta, labels = 1:nrow(beta), size = NULL) {
+mfa <- function (x, beta, levels = 1:nrow(beta), size = NULL) {
   q <- ncol(beta)
   if (!is.null(size)) {
-    output <- rep(sample(labels, size = size, replace = TRUE), q) %>%
-      factor(levels = labels)
+    output <- rep(sample(levels, size = size, replace = TRUE), q) %>%
+      factor(levels = levels)
   } else {
     if (!is.factor(x)) x <- factor(x)
     x <- x[1:(length(x) / q)]
-    if (length(labels) > 1) {
+    if (length(levels) > 1) {
       design <- model.matrix(~ -1 + x, data.frame(x))
     } else {
       design <- rep(1, length(x))
@@ -47,27 +65,33 @@ mfa <- function (x, beta, labels = 1:nrow(beta), size = NULL) {
   return(output)
 }
 
-#' @title Multivariate Fixed Effect
+#' @title Multivariate Fixed Effects
 #'
 #' @description
-#' \code{mfe} compute the multivariate fixed effect. Generally used with
-#' \code{sim_model}.
+#' \code{mfe} evaluates the multivariate fixed effects for a continuous replicated
+#' covariate \code{x}.
 #'
 #' @details
-#' details.
+#' Considering \eqn{x*} the continuous covariate of length \eqn{n}, the returning
+#' multivariate effect is
+#' \deqn{vec(x*b),}
+#' where \eqn{b} is a \eqn{q}-length row vector of regression coefficients and
+#' \eqn{vec(.)} represents a vectorization by columns of the provided matrix.
 #'
-#' @param x A vector of length \code{n} for which the fixed effect will be evaluated.
-#' @param beta A vector of length \code{q}, this is the fixed effect for each response
-#' variable.
+#' @param x A replicated continuous covariate of length \code{nq} for which the
+#' fixed effects are evaluated. It is a \eqn{q}-times replicated vector of \eqn{x*}.
+#' @param beta A vector of length \code{q}, where each element is a regression
+#' coefficient associated to each response variable.
 #'
-#' @return A matrix of dimension n x q.
+#' @return A \eqn{nq}-length numeric vector of the evaluated multivariate effects.
 #'
-#' @author Erick A. Chacon-Montalvan
+#' @author Erick A. Chacón-Montalván
 #'
 #' @examples
-#'
+#' # Different effects for each response.
 #' mfe(x = rep(rnorm(5), 3), beta = c(0.1, 0, 1))
 #'
+#' # Same effects for each response.
 #' mfe(x = rep(rnorm(5), 3), beta = rep(10, 3))
 #'
 #' @export
@@ -80,50 +104,62 @@ mfe <- function (x, beta) {
   return(output)
 }
 
-#' @title Multivariate random effects
+#' @title Multivariate Random Effects
 #'
 #' @description
-#' \code{function} description.
+#' \code{mre} handles the evaluation of multivariate random effects with two
+#' behaviours. It evaluates the multivariate effects applied to the factor \code{x}
+#' if \code{size == NULL} and it simulates the replicated factor \code{x} if
+#' \code{size} is provided.
 #'
 #' @details
-#' details.
+#' Considering \eqn{x*} the \eqn{n}-length factor under study with \eqn{k} levels and
+#' \eqn{X} the associated \eqn{nxk} design matrix with dummy variables corresponding
+#' to each level of the factor, the returning multivariate effect is
+#' \deqn{vec(XU),}
+#' where \eqn{U} is a \eqn{kxq} matrix of random effects and \eqn{vec(.)}
+#' represents a vectorization by columns of the provided matrix. Each row \eqn{u_i}
+#' of \eqn{U} is assumed to come from a zero-mean normal distribution with covariance
+#' matrix \eqn{S} of dimension \eqn{qxq},
 #'
-#' @param x factor vector to evaluate the random effect
-#' @param sigma variance matrix of the random effect
-#' @param groups character vector to name the \code{levels} of \code{x} or a numeric
-#' value indicating the number of groups of \code{x}
-#' @param size numeric value to simulate the covariate \code{x}
-#' @param replace An optional argument to simulate an independent random effect with
-#' one repetition (e.g. \code{mre(groups = 100, size = 100, replace = FALSE)})
+#' @param x A replicated covariate factor of length \eqn{nq} to evaluate the
+#' multivariate effects. It is a \eqn{q} times replicated vector of \eqn{x*}. If
+#' \code{size != NULL}, \code{x} is the output of the function.
+#' @param sigma A \eqn{qxq} covariance matrix \eqn{S} for the random effects.
+#' @param groups A character vector of length \eqn{k} to name the \code{levels} of
+#' the factor \code{x} or a numeric value indicating the number of groups of
+#' \code{x}.
+#' @param size A numeric value \eqn{n} representing the number of units, it is used to
+#' simulate the covariate \code{x}. In case \code{size == NULL}, \code{mfa} evaluates
+#' the effects.
+#' @param replace An logical value provided to the function \code{sample} to allow
+#' repetition of groups or not. It is used to simulate an independent random effect with
+#' one repetition (e.g. \code{mre(groups = 100, size = 100, replace = FALSE)}).
 #'
-#' @return return.
+#' @return A simulated replicated factor \eqn{x} in case \code{size} is provided;
+#' otherwise, a \eqn{nq}-length numeric vector of the evaluated multivariate
+#' effects.
 #'
-#' @author Erick A. Chacon-Montalvan
+#' @author Erick A. Chacón-Montalván
 #'
 #' @examples
-#'
+#' # Multivariate random effects for 10 units belonging to 3 groups.
 #' Sigma <- matrix(c(1, 0.8, 0.5, 0.8, 1, 0.5, 0.5, 0.5, 1), nrow = 3)
-#' (x <- mre(groups = 300, sigma = Sigma, size = 300))
+#' (x <- mre(groups = 3, sigma = Sigma, size = 10))
 #' (effect <- mre(x, sigma = Sigma))
 #'
-#' id_uni <- match(unique(x), x)
-#' effect_mat <- matrix(effect, ncol = nrow(Sigma))[id_uni, ]
-#' cov(effect_mat)
+#' # Multivariate independent random effects for 10 units.
+#' Sigma <- matrix(c(1, 0.8, 0.5, 0.8, 1, 0.5, 0.5, 0.5, 1), nrow = 3)
+#' (x <- mre(groups = 10, sigma = Sigma, size = 10, replace = FALSE))
+#' (effect <- mre(x, sigma = Sigma))
 #'
-#' (x <- mre(groups = 300, sigma = matrix(c(2, 1.5, 1.5, 2), nrow = 2), size = 3000))
-#' (effect <- mre(x, sigma = matrix(c(2, 1.5, 1.5, 2), nrow = 2)))
+#' # Multivariate random effects for 500 units belonging to 100 groups.
+#' Sigma <- matrix(c(1, 0.8, 0.5, 0.8, 1, 0.5, 0.5, 0.5, 1), nrow = 3)
+#' (x <- mre(groups = 100, sigma = Sigma, size = 500))
+#' (effect <- mre(x, sigma = Sigma))
 #'
-#' id_uni <- match(unique(x), x)
-#' effect_mat <- matrix(effect, ncol = 2)[id_uni, ]
-#' cov(effect_mat)
-#'
-#' (x <- mre(groups = 10, sigma = matrix(c(2, 1.5, 1.5, 2), nrow = 2),
-#'   size = 10, replace = FALSE))
-#' (effect <- mre(x, sigma = matrix(c(2, 1.5, 1.5, 2), nrow = 2)))
-#'
-#' id_uni <- match(unique(x), x)
-#' effect_mat <- matrix(effect, ncol = 2)[id_uni, ]
-#' cov(effect_mat)
+#' # Check empirical covariance matrix of the random effects.
+#' cov(unique(matrix(effect, ncol = nrow(Sigma))))
 #'
 #' @export
 mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
@@ -149,31 +185,7 @@ mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
   return(output)
 }
 
-# #' @export
-# mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
-#   q <- nrow(sigma)
-#   if (!is.null(size)) {
-#     if (is.numeric(groups) & length(groups) == 1) {
-#       groups <- seq_len(groups)
-#       ngroups <- length(groups)
-#     }
-#     output <- rep(sample(groups, size = size, replace = replace), q) %>%
-#       factor(levels = groups)
-#   } else {
-#     x <- x[1:(length(x) / q)]
-#     groups <- levels(x)
-#     right <- kronecker(chol(sigma), diag(length(groups)))
-#     beta <- crossprod(right, rnorm(length(groups) * nrow(sigma)))
-#     beta <- matrix(beta, nrow = length(groups))
-#
-#     design <- model.matrix(~ -1 + x, data.frame(x))
-#     output <- as.numeric(design %*% beta)
-#   }
-#   return(output)
-# }
-
-
-#' @title Simulate a Multivariate Gaussian process
+#' @title Multivariate Gaussian Processes
 #'
 #' @description
 #' \code{mgp} Simulate a Multivariate spatial Gaussian process known as linear model
@@ -193,7 +205,7 @@ mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
 #'
 #' @return A vector of the realization of the Gaussian Process
 #'
-#' @author Erick A. Chacon-Montalvan
+#' @author Erick A. Chacón-Montalván
 #'
 #' @examples
 #'

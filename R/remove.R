@@ -1,3 +1,7 @@
+# roxygen2::roxygenize("~/Documents/Repositories/datasim", roclets = c("collate", "namespace", "rd"))
+# devtools::load_all("..")
+#
+# roxygen2::roxygenize("datasim", roclets = c("collate", "namespace", "rd"))
 #
 # library(datasim)
 # q <- 10

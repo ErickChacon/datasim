@@ -4,7 +4,6 @@
 \name{datasim}
 \alias{datasim}
 \alias{datasim-package}
-\alias{datasim-package}
 \title{datasim: Data simulation based on models formulas}
 \description{
 The \code{datasim} package provide tools to simulate data frames based on models

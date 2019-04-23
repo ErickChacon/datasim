@@ -2,41 +2,59 @@
 % Please edit documentation in R/effects-multi.R
 \name{mfa}
 \alias{mfa}
-\title{Multivariate factor effects}
+\title{Multivariate Factor Effects}
 \usage{
-mfa(x, beta, labels = 1:nrow(beta), size = NULL)
+mfa(x, beta, levels = 1:nrow(beta), size = NULL)
 }
 \arguments{
-\item{x}{factor vector to evaluate the effect}
+\item{x}{A replicated covariate factor of length \eqn{nq} to evaluate the
+multivariate effects. It is a \eqn{q} times replicated vector of \eqn{x*}. If
+\code{size != NULL}, \code{x} is the output of the function.}
 
-\item{beta}{matrix of the effects for each level of \code{x}}
+\item{beta}{A \eqn{kxq} matrix B of regression coefficients representing the effects
+for each level of \code{x} on the response variables. Each column represents the
+effect to each response variable.}
 
-\item{labels}{character vector to name the \code{levels} of \code{x}}
+\item{levels}{A character vector of length \eqn{k} to name the \code{levels} of the
+factor \code{x}.}
 
-\item{size}{numeric value to simulate the covariate \code{x}}
+\item{size}{A numeric value \eqn{n} representing the number of units, it is used to
+simulate the covariate \code{x}. In case \code{size == NULL}, \code{mfa} evaluates
+the effects.}
 }
 \value{
-return.
+A simulated replicated factor \eqn{x} in case \code{size} is provided;
+otherwise, a \eqn{nq}-length numeric vector of the evaluated multivariate
+effects.
 }
 \description{
-\code{mfa} creates a multivariate factor effect given a factor.
+\code{mfa} handles the evaluation of multivariate factor effects with two
+behaviours. It evaluates the multivariate effects applied to the replicated factor
+\code{x} if \code{size == NULL} or simulates the replicated factor \code{x} if
+\code{size} is provided.
 }
 \details{
-\code{mfa} has two behaviours. If \code{size == NULL}, it evaluate the effects
-applied to the argument \code{x}; otherwise, it generates a factor \code{x}.
+Considering \eqn{x*} the \eqn{n}-length factor under study with \eqn{k} levels and
+\eqn{X} the associated \eqn{nxk} design matrix with dummy variables corresponding
+to each level of the factor, the returning multivariate effect is
+\deqn{vec(XB),}
+where \eqn{B} is a \eqn{kxq} matrix of regression coefficients and \eqn{vec(.)}
+represents a vectorization by columns of the provided matrix.
 }
 \examples{
-
-(x <- mfa(beta = cbind(1:2, 2:3, 0:1), size = 10))
+# Different effects for each response.
+(x <- mfa(beta = cbind(1:2, 2:3, 0:1), levels = c("F", "M"), size = 10))
 mfa(x, beta = cbind(1:2, 2:3, 0:1))
 
+# Same effects for each response.
 (x <- mfa(beta = replicate(3, 0:2), size = 10))
 mfa(x, beta = replicate(3, 0:2))
 
+# Differrent intercepts for each response.
 (x <- mfa(beta = cbind(1, 2, 0), size = 10))
 mfa(x, beta = cbind(1, 2, 0))
 
 }
 \author{
-Erick A. Chacon-Montalvan
+Erick A. Chacón-Montalván
 }

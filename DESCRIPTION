@@ -3,6 +3,7 @@ Type: Package
 Title: Data Simulation Based on Models Formulas
 Version: 1.0
 Date: 2017-12-22
+Encoding: UTF-8
 Authors@R: person("Erick A.", "Chacon-Montalvan", email = "eral.th07@gmail.com",
     role = c("aut", "cre"))
 Maintainer: Erick A. Chacon-Montalvan <eral.th07@gmail.com>
@@ -15,7 +16,7 @@ Imports:
     dplyr,
     purrr,
     magrittr
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.1
 Suggests: knitr,
     rmarkdown,
     psych,

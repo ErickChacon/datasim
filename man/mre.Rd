@@ -2,58 +2,70 @@
 % Please edit documentation in R/effects-multi.R
 \name{mre}
 \alias{mre}
-\title{Multivariate random effects}
+\title{Multivariate Random Effects}
 \usage{
 mre(x, sigma, groups, size = NULL, replace = TRUE)
 }
 \arguments{
-\item{x}{factor vector to evaluate the random effect}
+\item{x}{A replicated covariate factor of length \eqn{nq} to evaluate the
+multivariate effects. It is a \eqn{q} times replicated vector of \eqn{x*}. If
+\code{size != NULL}, \code{x} is the output of the function.}
 
-\item{sigma}{variance matrix of the random effect}
+\item{sigma}{A \eqn{qxq} covariance matrix \eqn{S} for the random effects.}
 
-\item{groups}{character vector to name the \code{levels} of \code{x} or a numeric
-value indicating the number of groups of \code{x}}
+\item{groups}{A character vector of length \eqn{k} to name the \code{levels} of
+the factor \code{x} or a numeric value indicating the number of groups of
+\code{x}.}
 
-\item{size}{numeric value to simulate the covariate \code{x}}
+\item{size}{A numeric value \eqn{n} representing the number of units, it is used to
+simulate the covariate \code{x}. In case \code{size == NULL}, \code{mfa} evaluates
+the effects.}
 
-\item{replace}{An optional argument to simulate an independent random effect with
-one repetition (e.g. \code{mre(groups = 100, size = 100, replace = FALSE)})}
+\item{replace}{An logical value provided to the function \code{sample} to allow
+repetition of groups or not. It is used to simulate an independent random effect with
+one repetition (e.g. \code{mre(groups = 100, size = 100, replace = FALSE)}).}
 }
 \value{
-return.
+A simulated replicated factor \eqn{x} in case \code{size} is provided;
+otherwise, a \eqn{nq}-length numeric vector of the evaluated multivariate
+effects.
 }
 \description{
-\code{function} description.
+\code{mre} handles the evaluation of multivariate random effects with two
+behaviours. It evaluates the multivariate effects applied to the factor \code{x}
+if \code{size == NULL} and it simulates the replicated factor \code{x} if
+\code{size} is provided.
 }
 \details{
-details.
+Considering \eqn{x*} the \eqn{n}-length factor under study with \eqn{k} levels and
+\eqn{X} the associated \eqn{nxk} design matrix with dummy variables corresponding
+to each level of the factor, the returning multivariate effect is
+\deqn{vec(XU),}
+where \eqn{U} is a \eqn{kxq} matrix of random effects and \eqn{vec(.)}
+represents a vectorization by columns of the provided matrix. Each row \eqn{u_i}
+of \eqn{U} is assumed to come from a zero-mean normal distribution with covariance
+matrix \eqn{S} of dimension \eqn{qxq},
 }
 \examples{
-
+# Multivariate random effects for 10 units belonging to 3 groups.
 Sigma <- matrix(c(1, 0.8, 0.5, 0.8, 1, 0.5, 0.5, 0.5, 1), nrow = 3)
-(x <- mre(groups = 300, sigma = Sigma, size = 300))
+(x <- mre(groups = 3, sigma = Sigma, size = 10))
 (effect <- mre(x, sigma = Sigma))
 
-id_uni <- match(unique(x), x)
-effect_mat <- matrix(effect, ncol = nrow(Sigma))[id_uni, ]
-cov(effect_mat)
+# Multivariate independent random effects for 10 units.
+Sigma <- matrix(c(1, 0.8, 0.5, 0.8, 1, 0.5, 0.5, 0.5, 1), nrow = 3)
+(x <- mre(groups = 10, sigma = Sigma, size = 10, replace = FALSE))
+(effect <- mre(x, sigma = Sigma))
 
-(x <- mre(groups = 300, sigma = matrix(c(2, 1.5, 1.5, 2), nrow = 2), size = 3000))
-(effect <- mre(x, sigma = matrix(c(2, 1.5, 1.5, 2), nrow = 2)))
+# Multivariate random effects for 500 units belonging to 100 groups.
+Sigma <- matrix(c(1, 0.8, 0.5, 0.8, 1, 0.5, 0.5, 0.5, 1), nrow = 3)
+(x <- mre(groups = 100, sigma = Sigma, size = 500))
+(effect <- mre(x, sigma = Sigma))
 
-id_uni <- match(unique(x), x)
-effect_mat <- matrix(effect, ncol = 2)[id_uni, ]
-cov(effect_mat)
-
-(x <- mre(groups = 10, sigma = matrix(c(2, 1.5, 1.5, 2), nrow = 2),
-  size = 10, replace = FALSE))
-(effect <- mre(x, sigma = matrix(c(2, 1.5, 1.5, 2), nrow = 2)))
-
-id_uni <- match(unique(x), x)
-effect_mat <- matrix(effect, ncol = 2)[id_uni, ]
-cov(effect_mat)
+# Check empirical covariance matrix of the random effects.
+cov(unique(matrix(effect, ncol = nrow(Sigma))))
 
 }
 \author{
-Erick A. Chacon-Montalvan
+Erick A. Chacón-Montalván
 }

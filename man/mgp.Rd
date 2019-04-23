@@ -4,7 +4,7 @@
 \alias{mgp}
 \title{Simulate a Multivariate Gaussian process}
 \usage{
-mgp(coords, variance, cor.model, cor.params, size = NULL)
+mgp(coords, variance, cor.model, cor.params, size = NULL, range = 1)
 }
 \arguments{
 \item{coords}{A list of coordinates.}
@@ -17,6 +17,8 @@ should be used to compute the correlation matrix}
 \item{cor.params}{List of lists indicating the parameters for each response.}
 
 \item{size}{numeric value to simulate the covariate \code{x}}
+
+\item{range}{range on the coordinates of the Gaussian process}
 }
 \value{
 A vector of the realization of the Gaussian Process
@@ -83,5 +85,5 @@ mgp(list(s1), variance, cor.model, cor.params)
 
 }
 \author{
-Erick A. Chacon-Montalvan
+Erick A. Chacón-Montalván
 }
