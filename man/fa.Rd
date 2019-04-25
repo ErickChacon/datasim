@@ -4,33 +4,44 @@
 \alias{fa}
 \title{Univariate factor effects}
 \usage{
-fa(x, beta, labels = 1:length(beta), size = NULL)
+fa(x, beta, levels = 1:length(beta), size = NULL)
 }
 \arguments{
-\item{x}{factor vector to evaluate the effect}
+\item{x}{A factor of length \eqn{n} to evaluate the effects. If \code{size !=
+NULL}, \code{x} is the output of the function.}
 
-\item{beta}{numeric vector of the effects for each level of \code{x}}
+\item{beta}{A numeric vector b of regression coefficients representing the effects
+for each level of \code{x}.}
 
-\item{labels}{character vector to name the \code{levels} of \code{x}}
+\item{levels}{A character vector of length \eqn{k} to name the \code{levels} of the
+factor \code{x}.}
 
-\item{size}{numeric value to simulate the covariate \code{x}}
+\item{size}{A numeric value \eqn{n} representing the number of units, it is used to
+simulate the covariate \code{x}. In case \code{size == NULL}, \code{fa} evaluates
+the effects.}
 }
 \value{
-return.
+A simulated factor \eqn{x} in case \code{size} is provided; otherwise, a
+\eqn{n}-length numeric vector of the evaluated effects.
 }
 \description{
-\code{function} description.
+\code{fa} handles the evaluation of factor effects with two behaviours. It
+evaluates the effects applied to the factor \code{x} if \code{size == NULL} or
+simulates a factor \code{x} if \code{size} is provided.
 }
 \details{
-details.
+Considering \eqn{x} the \eqn{n}-length factor under study with \eqn{k} levels and
+\eqn{X} the associated \eqn{nxk} design matrix with dummy variables corresponding
+to each level of the factor, the returning effect is
+\deqn{Xb,}
+where \eqn{b} is a \eqn{k}-length vector of regression coefficients.
 }
 \examples{
-
 (x <- fa(beta = -1:1, size = 10))
 fa(x, beta = -1:1)
 fa(x, beta = 1:3)
 
 }
 \author{
-Erick A. Chacon-Montalvan
+Erick A. Chacón-Montalván
 }

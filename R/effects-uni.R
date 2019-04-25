@@ -2,30 +2,41 @@
 #' @title Univariate factor effects
 #'
 #' @description
-#' \code{function} description.
+#' \code{fa} handles the evaluation of factor effects with two behaviours. It
+#' evaluates the effects applied to the factor \code{x} if \code{size == NULL} or
+#' simulates a factor \code{x} if \code{size} is provided.
 #'
 #' @details
-#' details.
+#' Considering \eqn{x} the \eqn{n}-length factor under study with \eqn{k} levels and
+#' \eqn{X} the associated \eqn{nxk} design matrix with dummy variables corresponding
+#' to each level of the factor, the returning effect is
+#' \deqn{Xb,}
+#' where \eqn{b} is a \eqn{k}-length vector of regression coefficients.
 #'
-#' @param x factor vector to evaluate the effect
-#' @param beta numeric vector of the effects for each level of \code{x}
-#' @param labels character vector to name the \code{levels} of \code{x}
-#' @param size numeric value to simulate the covariate \code{x}
+#' @param x A factor of length \eqn{n} to evaluate the effects. If \code{size !=
+#' NULL}, \code{x} is the output of the function.
+#' @param beta A numeric vector b of regression coefficients representing the effects
+#' for each level of \code{x}.
+#' @param levels A character vector of length \eqn{k} to name the \code{levels} of the
+#' factor \code{x}.
+#' @param size A numeric value \eqn{n} representing the number of units, it is used to
+#' simulate the covariate \code{x}. In case \code{size == NULL}, \code{fa} evaluates
+#' the effects.
 #'
-#' @return return.
+#' @return A simulated factor \eqn{x} in case \code{size} is provided; otherwise, a
+#' \eqn{n}-length numeric vector of the evaluated effects.
 #'
-#' @author Erick A. Chacon-Montalvan
+#' @author Erick A. Chacón-Montalván
 #'
 #' @examples
-#'
 #' (x <- fa(beta = -1:1, size = 10))
 #' fa(x, beta = -1:1)
 #' fa(x, beta = 1:3)
 #'
 #' @export
-fa <- function (x, beta, labels = 1:length(beta), size = NULL) {
+fa <- function (x, beta, levels = 1:length(beta), size = NULL) {
   if (!is.null(size)) {
-    output <- factor(sample(labels, size = size, replace = TRUE), levels = labels)
+    output <- factor(sample(levels, size = size, replace = TRUE), levels = levels)
   } else {
     names(beta) <- levels(x)
     output <- as.numeric(beta[x])
@@ -52,7 +63,7 @@ fa <- function (x, beta, labels = 1:length(beta), size = NULL) {
 #'
 #' @return return.
 #'
-#' @author Erick A. Chacon-Montalvan
+#' @author Erick A. Chacón-Montalván
 #'
 #' @examples
 #'
@@ -108,7 +119,7 @@ exp_cor <- function (d, phi) {
 #'
 #' @return A vector of the realization of the Gaussian Process
 #'
-#' @author Erick A. Chacon-Montalvan
+#' @author Erick A. Chacón-Montalván
 #'
 #' @examples
 #'

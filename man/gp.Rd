@@ -52,5 +52,5 @@ plot(s1, s2, cex = y)
 
 }
 \author{
-Erick A. Chacon-Montalvan
+Erick A. Chacón-Montalván
 }

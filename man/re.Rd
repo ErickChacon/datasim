@@ -46,5 +46,5 @@ re(x, sigma = 10)
 
 }
 \author{
-Erick A. Chacon-Montalvan
+Erick A. Chacón-Montalván
 }
