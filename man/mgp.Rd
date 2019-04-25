@@ -2,86 +2,88 @@
 % Please edit documentation in R/effects-multi.R
 \name{mgp}
 \alias{mgp}
-\title{Simulate a Multivariate Gaussian process}
+\title{Multivariate Gaussian Processes}
 \usage{
-mgp(coords, variance, cor.model, cor.params, size = NULL, range = 1)
+mgp(coords, A, cor.model, cor.params, size = NULL, range = 1)
 }
 \arguments{
-\item{coords}{A list of coordinates.}
+\item{coords}{A list of replicated coordinates. Each coordinate is a \eqn{q} replicated
+vector of the unique coordinates. If \code{size != NULL}, \code{coords} is the
+output of the function \code{mgp}.}
 
-\item{variance}{A qxq cross-covariance matrix Sigma such as \code{A=chol(Sigma)}.}
+\item{A}{A qxm matrix that defines the relationship between \eqn{Y(h)} and
+\eqn{S(h)}.}
 
-\item{cor.model}{A character or function indicating the covariance function that
-should be used to compute the correlation matrix}
+\item{cor.model}{A character or function indicating the correlation function to
+be used to compute the correlation matrix}
 
-\item{cor.params}{List of lists indicating the parameters for each response.}
+\item{cor.params}{A nested list of the parameters of the correlation function for
+each response.}
 
-\item{size}{numeric value to simulate the covariate \code{x}}
+\item{size}{A numeric value \eqn{n} representing the number of locations, it is used to
+simulate the coordinates \code{coords}. In case \code{size == NULL}, \code{mgp}
+simulates the multivariate Gaussian process.}
 
-\item{range}{range on the coordinates of the Gaussian process}
+\item{range}{Range of the coordinates of the Gaussian processes.}
 }
 \value{
-A vector of the realization of the Gaussian Process
+A list of simulated replicated coordinates in case \code{size} is provided;
+otherwise, a \eqn{nq}-length numeric vector of the evaluated multivariate Gaussian
+process.
 }
 \description{
-\code{mgp} Simulate a Multivariate spatial Gaussian process known as linear model
-of coregionalization Y(h) = AS(h), where S(h) is a vector of q independent Gaussian
-processes.
+\code{mgp} handles the evaluation of multivariate Gaussian processes with two
+behaviours. It evaluates the multivariate effects applied to the coordinates
+\code{coords} if \code{size == NULL} or it simulates the coordinates
+\code{coords} if \code{size} is provided.
 }
 \details{
-details.
+The \eqn{q}-dimensional multivariate Gaussian process \eqn{Y(h)} is
+expressed as a linear combination
+\deqn{Y(h) = AS(h).}
+where \eqn{S(h)} is a vector of \eqn{m} standardized independent Gaussian
+processes at location \eqn{h} and \eqn{A} a \eqn{qxm} matrix of coefficients.
 }
 \examples{
+## Simulation of a temporal multivariate Gaussian process
 
-# Generate coordinates
-N <- 100
-s1 <- rep(2 * runif(N), 2)
-s2 <- rep(2 * runif(N), 2)
+# Define the number of location and responses, and a linear transformation matrix
+n <- 200
+q <- 3
+A <- matrix(c(1, 0, 1, 0, 1, - 0.8), nrow = q)
 
-# Covariance parameters
+# Simulate coordinates
+coords <- mgp(list(time = NA), A, size = n)
+
+# Simulate a multivariate Gaussian process
+cor.params <- list(list(phi = 0.08), list(phi = 0.15))
+y <- mgp(coords, A, "exp_cor", cor.params)
+
+# Visualize the temporal multivariate Gaussian process
+data <- data.frame(time = coords[[1]], y, response = factor(rep(1:q, each = n)))
+ggplot(data, aes(time)) +
+  geom_line(aes(y = y, col = response))
+
+## Simulation of a spatial multivariate Gaussian process
+
+# Define the number of location and responses, and a linear transformation matrix
+n <- 1500
 q <- 2
-var <- sqrt(diag(c(4, 4)))
-A <- matrix(c(1, - 0.8, 0, 0.6), nrow = 2)
-variance <- var \%*\% tcrossprod(A) \%*\% var
-cor.params <- list(list(phi = 0.08), list(phi = 0.08))
+A <- matrix(c(1, -1), nrow = q)
 
-# Generate the multivariate Gaussian process
-y <- mgp(list(s1, s2), variance, "exp_cor", cor.params)
-y1 <- y[1:N]
-y2 <- y[(N + 1):(2 * N)]
+# Simulate coordinates
+coords <- mgp(list(s1 = NA, s2 = NA), A, size = n)
 
-# Check correlation
-cor(y1, y2)
-plot(y1, y2)
+# Simulate a multivariate Gaussian process
+cor.params <- list(list(phi = 0.1))
+y <- mgp(coords, A, "exp_cor", cor.params)
 
-# Visualize the spatial
-plot(s1, s2, cex = y1, col = 2)
-points(s1, s2, cex = y2, col = 3)
-
-variance = matrix(c(2, 1.5, 1.5, 2), nrow = 2)
-(x <- mgp(list(s1 = NA, s2 = NA), variance, size = 100))
-(s1 <- x[[1]])
-(s2 <- x[[2]])
-cor.model <- "exp_cor"
-cor.params <- list(list(phi = 0.05), list(phi = 0.07))
-(out <- mgp(list(s1, s2), variance, cor.model, cor.params))
-out_mat <- matrix(out, ncol = 2)
-plot(out_mat)
-cov(out_mat)
-
-variance <- matrix(c(1, 0.8, 0.5, 0.8, 1, 0.5, 0.5, 0.5, 1), nrow = 3)
-(x <- mgp(list(s1 = NA), variance, size = 10))
-(s1 <- x[[1]])
-cor.model <- "exp_cor"
-cor.params <- list(list(phi = 0.05), list(phi = 0.07), list(phi = 1))
-mgp(list(s1), variance = variance, cor.model = cor.model, cor.params = cor.params)
-
-variance <- matrix(c(1, 0.8, 0.5, 0.8, 1, 0.5, 0.5, 0.5, 1), nrow = 3)
-(x <- mgp(list(s1 = NA), variance, size = 100))
-(s1 <- x[[1]])
-cor.model <- "exp_cor"
-cor.params <- list(list(phi = 0.05), list(phi = 0.07), list(phi = 1))
-mgp(list(s1), variance, cor.model, cor.params)
+# Visualize the temporal multivariate Gaussian process
+data <- data.frame(s1 = coords[[1]], s2 = coords[[2]], y,
+  response = factor(rep(1:q, each = n)))
+ggplot(data, aes(s1, s2)) +
+  geom_point(aes(size = y, col = y)) +
+  facet_wrap(~ response)
 
 }
 \author{
