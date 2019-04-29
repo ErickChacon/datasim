@@ -237,6 +237,7 @@ mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
 #'
 #' # Visualize the temporal multivariate Gaussian process
 #' data <- data.frame(time = coords[[1]], y, response = factor(rep(1:q, each = n)))
+#' library(ggplot2)
 #' ggplot(data, aes(time)) +
 #'   geom_line(aes(y = y, col = response))
 #'

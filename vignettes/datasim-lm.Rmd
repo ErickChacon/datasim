@@ -79,7 +79,7 @@ can be included with the option `labels` in the function `fa`.
 
 ```{r}
 f <- list(
-  mean ~ I(5) + I(0.5 * x1) + fa(sex, beta = c(0, 1), labels = c("male", "female")),
+  mean ~ I(5) + I(0.5 * x1) + fa(sex, beta = c(0, 1), levels = c("male", "female")),
   sd ~ I(1)
   )
 data_model <- sim_model(formula = f, n = 100, seed = 1)

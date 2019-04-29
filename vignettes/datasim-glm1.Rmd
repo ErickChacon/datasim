@@ -37,7 +37,7 @@ defined as follows.
 
 ```{r}
 f <- list(
-  prob ~ I(1 * x1) + fa(sex, beta = c(0, -1), labels = c("male", "female")),
+  prob ~ I(1 * x1) + fa(sex, beta = c(0, -1), levels = c("male", "female")),
   size ~ I(1)
   )
 ```
