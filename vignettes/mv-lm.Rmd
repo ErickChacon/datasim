@@ -16,18 +16,16 @@ knitr::opts_chunk$set(comment = "#>")
 options(width = 100)
 ```
 
-In this vignette, we show how to use the three main functions of the package
-`datasim` which are `sim_data`, `model_frame` and `model_response`. This is an
-introductory tutorial and only the simulation of linear Gaussian models are
-presented.
+In this vignette, we show how to simulate multivariate linear Gaussian models.
 
 #### Required packages
 
 ```{r}
 library(datasim)
+library(ggplot2)
 ```
 
-## Linear Model
+## Multivariate Linear Model
 
 First, we need to define a list of formulas specifying the type of effect that are
 included in the linear predictor of each parameter. For example, this list can be
@@ -40,21 +38,18 @@ f <- list(
   )
 ```
 
-In this formula, it can be seen that an intercept, a linear effect on `x1` and a
-factor effect on `sex` are being included on the `mean` parameter, while the
-standard deviation `sd` is constant. The simulation of the dataset can be done with
-the function `sim_model`, which implements the simulation in two parts:
+In this formula, it can be seen a multivariate fixed effect on `x` included on the `mean` parameter and a multivariate factor effect on `ones`. Note the given that length of `beta` is three, then the number of response variables is three.
 
 ### Simulate the dataset
 
 The data for our model can be simulated with the function `sim_model`.
-The two main arguments of `sim_model` function, when working with linear Gaussian
-models, are the `formula` and the sample size `n`.
+The two main arguments of `sim_model` function when working with multivariate linear Gaussian
+models, are the `formula`, the sample size `n` and the number of `responses`.
 In order to obtain a reproducible dataset, a seed must be defined
 with the function `set.seed` or by using the argument `seed` in `sim_model`.
 
 ```{r}
-data_model <- sim_model(formula = f, n = 1000, seed = 1, responses = 3)
+data_model <- sim_model(formula = f, n = 1000, responses = 3, seed = 1)
 ```
 
 The first 10 rows of the generated dataset looks as follows:
@@ -63,17 +58,20 @@ knitr::kable(head(data_model, 10))
 ```
 
 it contains an unique `id` for each individual, all the predictors included in the
-`formula` (i.e. `x1` and `sex`), the parameters (`mean` and `sd`), and the simulated
-`response` variable.
+`formula` (i.e. `x1` and `ones`), the parameters (`mean` and `sd`), the simulated
+`response` variable, and the number of response `response_label`.
 
-Some customization for the effects can be used, for instance the labels of the factor
-can be included with the option `labels` in the function `fa`.
+### Visualizing the multivariate fixed effects
+
 ```{r}
-library(ggplot2)
 ggplot(data_model, aes(x, response)) +
   geom_point(aes(col = factor(response_label)), alpha = 1/5)
 
 ```
+
+## Multivariate Linear Mixed Model
+
+### Simulate the dataset
 
 ```{r}
 
@@ -82,19 +80,31 @@ vars <- diag(c(1,1,3))
 Sigma <- vars %*% Cor %*% vars
 
 f <- list(
-  # mean ~ mre(factor(id), sigma = get("Sigma")),
   mean ~ mfe(x, beta = c(-10, 0, 10)) + mre(factor(id), sigma = get("Sigma")),
   sd ~ I(0)
   )
 
 data_model <- sim_model(formula = f, n = 1000, seed = 1, responses = 3)
 knitr::kable(head(data_model, 10))
+
+```
+
+### Visualizing the multivariate fixed effects
+
+```{r}
+
 ggplot(data_model, aes(x, response)) +
   geom_point(aes(col = factor(response_label)), alpha = 1/5)
 
+```
+
+### Visualizing the multivariate random effects
+
+```{r}
 ggplot(data_model, aes(id, mre.factor.mean)) +
   geom_line(aes(col = factor(response_label)), alpha = 0.8) +
-  facet_wrap(~ response_label, ncol = 1, scales = "free_y")
+  facet_wrap(~ response_label, ncol = 1, scales = "free_y") +
+  theme(legend.position = "bottom")
 
 cor(matrix(data_model$mre.factor.mean, ncol = 3))
 

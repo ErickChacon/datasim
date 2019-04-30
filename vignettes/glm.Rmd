@@ -42,17 +42,6 @@ f <- list(
   )
 ```
 
-```{r}
-model_frame <- model_frame(f, n = 100)
-formula = attr(model_frame, "formula")
-link_inv = list(psych::logistic, identity)
-generator = rbinom
-responses = c("response")
-effects_save = FALSE
-model_response_lm(model_frame, link_inv = list(psych::logistic, identity),
-                  generator = rbinom)
-```
-
 In this formula, a linear effect on `x1` and a factor effect on `sex` are
 included on the linear predictor of the `prob` parameter, while the `size` is equal
 to 1 to obtain a Bernoulli density.
@@ -67,7 +56,7 @@ function for `size`.
 data_model <- sim_model(formula = f,
                         link_inv = list(psych::logistic, identity),
                         generator = rbinom,
-                        n = 100)
+                        n = 100, seed = 1)
 ```
 
 The first 10 rows of the generated dataset looks as follows:

@@ -1,6 +1,6 @@
 ---
 title: "Data Simulation for Linear Models"
-author: "Erick A. Chacon-Montalvan"
+author: "Erick A. Chacón-Montalván"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
@@ -75,7 +75,7 @@ it contains an unique `id` for each individual, all the predictors included in t
 `response` variable.
 
 Some customization for the effects can be used, for instance the labels of the factor
-can be included with the option `labels` in the function `fa`.
+can be included with the option `levels` in the function `fa`.
 
 ```{r}
 f <- list(
@@ -110,7 +110,7 @@ knitr::kable(head(data_frame, 10))
 
 ### Simulate the response variable only
 
-If the data is already obtained, we can simulate the response variable using the
+If the covariates are already obtained, we can simulate the response variable using the
 function `model_response`.
 
 ```{r}
@@ -118,7 +118,7 @@ data_frame <- model_response(data_frame, formula = f)
 ```
 
 The first 10 rows of the generated dataset looks as follows. As expected, only the
-covariates are simulated.
+response variable and associated parameters are simulated.
 
 ```{r, echo = FALSE, results = 'asis'}
 knitr::kable(head(data_frame, 10))
