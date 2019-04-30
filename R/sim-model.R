@@ -138,7 +138,7 @@ sim_model <- function (formula = list(mean ~ I(0), sd ~ I(1)),
 #'
 #' @importFrom tibble tibble as_tibble
 #' @importFrom purrr map reduce map_chr
-#' @importFrom dplyr select mutate arrange group_by mutate ungroup bind_cols
+#' @importFrom dplyr select mutate arrange group_by mutate ungroup bind_cols n
 #' @importFrom tidyr unnest
 #' @importFrom stats setNames
 #'
@@ -168,7 +168,7 @@ model_frame <- function (formula, n = nrow(idata)/q, idata = NULL,
     dplyr::arrange(type_order) %>%
     dplyr::group_by(covs) %>%
     dplyr::mutate(
-      rep = 1:n(),
+      rep = 1:dplyr::n(),
       generate = "none"
       ) %>%
     dplyr::ungroup()

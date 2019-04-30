@@ -4,7 +4,7 @@ author: "Erick A. Chacon-Montalvan"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Data Simulation for GLM}
+  %\VignetteIndexEntry{Data Simulation for Generalized Linear Models}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
