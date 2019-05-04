@@ -182,6 +182,9 @@ model_frame <- function (formula, n = nrow(idata) / q, idata = NULL,
   if (is.null(idata)) {
     idata <- tibble::tibble(id = rep(1:n, q))
   } else {
+    if (nrow(idata) == n & q > 1) {
+      idata <- do.call("rbind", replicate(q, idata, simplify = FALSE))
+    }
     idata$id <- rep(1:n, q)
   }
   covariates <- within(covariates, {
