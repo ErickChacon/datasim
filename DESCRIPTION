@@ -15,7 +15,8 @@ Imports:
     tibble,
     dplyr,
     purrr,
-    magrittr
+    magrittr,
+    sf
 RoxygenNote: 6.1.1
 Suggests: knitr,
     rmarkdown,
