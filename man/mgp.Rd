@@ -4,7 +4,8 @@
 \alias{mgp}
 \title{Multivariate Gaussian Processes}
 \usage{
-mgp(coords, A, cor.model, cor.params, size = NULL, range = 1)
+mgp(coords, A, cor.model, cor.params, size = NULL, range = 1,
+  geom = NULL)
 }
 \arguments{
 \item{coords}{A list of replicated coordinates. Each coordinate is a \eqn{q} replicated
@@ -25,6 +26,9 @@ simulate the coordinates \code{coords}. In case \code{size == NULL}, \code{mgp}
 simulates the multivariate Gaussian process.}
 
 \item{range}{Range of the coordinates of the Gaussian processes.}
+
+\item{geom}{object of class ‘sf’ or ‘sfc’ to define the area where to simulate the
+samples}
 }
 \value{
 A list of simulated replicated coordinates in case \code{size} is provided;
