@@ -12,7 +12,8 @@
 #' parameters.
 #' @param generator Function to generate the response variables given the parameters
 #' @param n Number of observations to be simulated
-#' @param responses character vector indicating the names of the response variables
+#' @param responses a numeric value indicating the number of response or a character
+#' vector indicating the names of the response variables
 #' @param init_data Initial data including some variables to not been simulated.
 #' @param lm_syntax Optional logical argument to indicate if the usual syntax of
 #' \code{formula.lm} should be used.
@@ -68,7 +69,6 @@
 #' @importFrom tibble as_tibble
 #'
 #' @export
-
 sim_model <- function (formula = list(mean ~ I(0), sd ~ I(1)),
                        link_inv = replicate(length(formula), identity),
                        generator = rnorm, n = nrow(init_data),
@@ -78,7 +78,12 @@ sim_model <- function (formula = list(mean ~ I(0), sd ~ I(1)),
 
   if (!is.null(seed)) set.seed(seed)
 
-  data <- model_frame(formula, n = n, idata = init_data, q = responses)
+  resp_list <- responses_check(responses)
+  response_name <- resp_list$name
+  response_labels <- resp_list$labels
+  q <- resp_list$q
+
+  data <- model_frame(formula, n = n, idata = init_data, q = q)
 
   if (lm_syntax == TRUE) {
     data <- model_response_lm(model_frame = data, link_inv = link_inv,
@@ -143,7 +148,7 @@ sim_model <- function (formula = list(mean ~ I(0), sd ~ I(1)),
 #' @importFrom stats setNames
 #'
 #' @export
-model_frame <- function (formula, n = nrow(idata)/q, idata = NULL,
+model_frame <- function (formula, n = nrow(idata) / q, idata = NULL,
                          q = 1, seed = NULL) {
 
   if (!is.null(seed)) set.seed(seed)
@@ -330,7 +335,8 @@ model_response <- function (model_frame, formula = attr(model_frame, "formula"),
 #' @param link_inv A list of function representing the inverse link function for the
 #' parameters.
 #' @param generator Function to generate the response variables given the parameters
-#' @param responses character vector indicating the names of the response variables
+#' @param responses a numeric value indicating the number of response or a character
+#' vector indicating the names of the response variables
 #' @param effects_save Optional logical argument to save or not generated random
 #' effects
 #' @param seed Seed to be defined with function \code{set.seed} to obtain reproducible
@@ -366,7 +372,6 @@ model_response_lm <- function (model_frame, formula = attr(model_frame, "formula
   nq <- nrow(model_frame)
   n <- length(unique(model_frame$id))
   q <- nq / n
-  # q <- if(is.character(responses)) length(responses) else responses
   params <- purrr::map_chr(formula, ~ all.vars(.)[1])
   nterms <- purrr::map(formula, ~ length(attr(terms(.), "variables")) - 2)
 
@@ -430,20 +435,12 @@ model_response_lm <- function (model_frame, formula = attr(model_frame, "formula
     purrr::map2(link_inv, ~ .y(.x))
 
   # Simulate response variables on the list
-  # responses <- as.character(responses)
-  # if (q > 1) {
-  #   if (length(responses) == q) {
-  #     response <- "response"
-  #   } else {
-  #     response <- responses[1]
-  #     responses <- 1:q
-  #   }
-  # }
-  response <- "response"
-  responses <- 1:q
-  params_ls[response] <- list(do.call(generator, c(n = n * q, params_ls[params])))
-  response_label <- paste0(response, "_label")
-  if (q > 1) params_ls[response_label] <- list(rep(responses, each = n))
+  resp_list <- responses_check(responses)
+  response_name <- resp_list$name
+  response_labels <- resp_list$labels
+  params_ls[response_name] <- list(do.call(generator, c(n = n * q, params_ls[params])))
+  response_label <- paste0(response_name, "_label")
+  if (q > 1) params_ls[response_label] <- list(rep(response_labels, each = n))
   # params_ls$id <- rep(1:n, q)
 
   # Join covariates, with parameters and response variables
@@ -454,4 +451,27 @@ model_response_lm <- function (model_frame, formula = attr(model_frame, "formula
   model_frame <- dplyr::bind_cols(model_frame, tibble::as_tibble(params_ls))
 
   return(model_frame)
+}
+
+responses_check <- function (responses = "response") {
+  if (length(responses) == 1) {
+    if (is.character(responses)) {
+      q <- 1
+      name <- responses
+      labels <- NULL
+    } else {
+      q <- responses
+      name <- "response"
+      labels <- 1:q
+    }
+  } else if (length(responses) > 1) {
+    q <- length(responses)
+    name <- "response"
+    if (is.character(responses)) {
+      labels <- responses
+    } else {
+      labels <- 1:q
+    }
+  }
+  return(list(q = q, name = name, labels = labels))
 }

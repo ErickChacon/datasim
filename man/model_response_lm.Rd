@@ -20,7 +20,8 @@ parameters.}
 
 \item{generator}{Function to generate the response variables given the parameters}
 
-\item{responses}{character vector indicating the names of the response variables}
+\item{responses}{a numeric value indicating the number of response or a character
+vector indicating the names of the response variables}
 
 \item{effects_save}{Optional logical argument to save or not generated random
 effects}

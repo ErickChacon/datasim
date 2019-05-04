@@ -21,7 +21,8 @@ parameters.}
 
 \item{n}{Number of observations to be simulated}
 
-\item{responses}{character vector indicating the names of the response variables}
+\item{responses}{a numeric value indicating the number of response or a character
+vector indicating the names of the response variables}
 
 \item{init_data}{Initial data including some variables to not been simulated.}
 
