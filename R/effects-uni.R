@@ -116,6 +116,8 @@ exp_cor <- function (d, phi) {
 #' @param cor.params A list of the parameters required by the \code{cor.model} function.
 #' @param sigma2 variance of the Gaussian process
 #' @param size numeric value to simulate the covariate \code{x}
+#' @param geom object of class ‘sf’ or ‘sfc’ to define the area where to simulate the
+#' samples
 #'
 #' @return A vector of the realization of the Gaussian Process
 #'
@@ -148,10 +150,18 @@ exp_cor <- function (d, phi) {
 #' @importFrom purrr map
 #'
 #' @export
-gp <- function (coords, cor.model, cor.params, sigma2 = 1, size = NULL) {
+gp <- function (coords, cor.model, cor.params, sigma2 = 1, size = NULL, geom = NULL) {
   if (!is.null(size)) {
     ncoords <- purrr::map(coords, is.na) %>% do.call(sum, .)
-    output <- replicate(ncoords, list(stats::runif(size)))
+    if (ncoords == 2 && !is.null(geom) ) {
+      output <- st_sample(geom, size = size) %>%
+        sf::st_coordinates() %>%
+        as.data.frame() %>%
+        as.list() %>%
+        setNames(NULL)
+    } else {
+      output <- replicate(ncoords, list(stats::runif(size)))
+    }
   } else {
     coords <- do.call(cbind, coords)
     n <- nrow(coords)
@@ -162,4 +172,6 @@ gp <- function (coords, cor.model, cor.params, sigma2 = 1, size = NULL) {
   }
   return(output)
 }
+
+
 

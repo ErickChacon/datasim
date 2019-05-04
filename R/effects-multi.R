@@ -213,6 +213,8 @@ mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
 #' simulate the coordinates \code{coords}. In case \code{size == NULL}, \code{mgp}
 #' simulates the multivariate Gaussian process.
 #' @param range Range of the coordinates of the Gaussian processes.
+#' @param geom object of class ‘sf’ or ‘sfc’ to define the area where to simulate the
+#' samples
 #'
 #' @return A list of simulated replicated coordinates in case \code{size} is provided;
 #' otherwise, a \eqn{nq}-length numeric vector of the evaluated multivariate Gaussian
@@ -266,11 +268,20 @@ mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
 #' @importFrom purrr map reduce
 #'
 #' @export
-mgp <- function (coords, A, cor.model, cor.params, size = NULL, range = 1) {
+mgp <- function (coords, A, cor.model, cor.params, size = NULL, range = 1, geom = NULL) {
   q <- nrow(A)
   if (!is.null(size)) {
     ncoords <- purrr::map(coords, is.na) %>% do.call(sum, .)
-    output <- replicate(ncoords, list(rep(range * stats::runif(size), q)))
+    if (ncoords == 2 && !is.null(geom) ) {
+      output <- st_sample(geom, size = size) %>%
+        sf::st_coordinates() %>%
+        as.data.frame() %>%
+        as.list() %>%
+        setNames(NULL) %>%
+        map(~ rep(., q))
+    } else {
+      output <- replicate(ncoords, list(rep(range * stats::runif(size), q)))
+    }
   } else {
     coords <- do.call(cbind, coords)
     coords <- coords[1:(nrow(coords) / q), , drop = FALSE]
