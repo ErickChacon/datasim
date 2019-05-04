@@ -298,27 +298,7 @@ mgp <- function (coords, A, cor.model, cor.params, size = NULL, range = 1, geom 
 }
 
 
-#' @title bla
-#'
-#' @description
-#' \code{function} description.
-#'
-#' @details
-#' details.
-#'
-#' @param par.
-#'
-#' @return return.
-#'
-#' @author Erick A. Chacon-Montalvan
-#'
-#' @examples
-#'
-#'
-#'
 #' @importFrom sf st_sample
-#'
-#' @export
 st_sample <- function (..., size) {
   output <- sf::st_sample(..., size = size * 2)
   output <- output[sample(1:length(output), size)]
