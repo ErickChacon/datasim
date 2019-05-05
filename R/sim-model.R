@@ -173,7 +173,8 @@ model_frame <- function (formula, n = nrow(idata) / q, idata = NULL,
     dplyr::arrange(type_order) %>%
     dplyr::group_by(covs) %>%
     dplyr::mutate(
-      rep = 1:dplyr::n(),
+      # rep = 1:dplyr::n(),
+      rep = if (n() > 0) 1:dplyr::n() else NA,
       generate = "none"
       ) %>%
     dplyr::ungroup()
@@ -359,6 +360,7 @@ model_response <- function (model_frame, formula = attr(model_frame, "formula"),
 #' @importFrom tibble tibble as_tibble
 #' @importFrom purrr map map_chr map2
 #' @importFrom dplyr left_join
+#' @importFrom stats update
 #'
 #' @export
 
@@ -391,12 +393,25 @@ model_response_lm <- function (model_frame, formula = attr(model_frame, "formula
     id = 1:length(call),
     covs = purrr::map(call, all.vars),
     type = purrr::map_chr(call, ~ as.character(.x[[1]])),
-    ncovs = purrr::map_int(covs, length)
+    ncovs = purrr::map_int(covs, length),
+    call_new = purrr::map2(call, type, ~ if (.y == "mi") update_call_size(.x, n) else .x)
     )
+
+  # update formula for multivariate intercepts
+    for (i in 1:nrow(effects)) {
+      if (effects$type[i] == "mi") {
+        f_id <- match(effects$params[i], params)
+        formula[[f_id]] <-
+          update(formula[[f_id]],
+                 substitute( ~ . - x + y,
+                            list(x = effects$call[[i]], y = effects$call_new[[i]])))
+      }
+    }
 
   # Remove intercepts from formula
   param_form <- effects %>%
-    dplyr::filter(ncovs == 0) %>%
+    # dplyr::filter(ncovs == 0) %>%
+    dplyr::filter(ncovs == 0 & type == "I" ) %>%
     dplyr::left_join(tibble::tibble(params), ., by = "params") %>%
     dplyr::mutate(
       offset = purrr::map_dbl(call, ~ ifelse(is.null(.), 0, eval(.))),
@@ -443,7 +458,7 @@ model_response_lm <- function (model_frame, formula = attr(model_frame, "formula
   response_labels <- resp_list$labels
   params_ls[response_name] <- list(do.call(generator, c(n = n * q, params_ls[params])))
   response_label <- paste0(response_name, "_label")
-  if (q > 1) params_ls[response_label] <- list(rep(response_labels, each = n))
+  if (q > 1) params_ls[response_label] <- list(factor(rep(response_labels, each = n), response_labels))
   # params_ls$id <- rep(1:n, q)
 
   # Join covariates, with parameters and response variables
@@ -478,3 +493,12 @@ responses_check <- function (responses = "response") {
   }
   return(list(q = q, name = name, labels = labels))
 }
+
+update_call_size <- function (call, val, param = "size") {
+  call <- as.list(call)
+  call["size"] <- val
+  call <- as.call(call)
+  return(call)
+}
+
+

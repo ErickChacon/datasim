@@ -1,4 +1,24 @@
 
+#' @title Multivariate Intercepts
+#'
+#' @description
+#' \code{mi} handles the evaluation of multivariate intercepts.
+#'
+#' @param beta A \eqn{q}-length numeric vector of intercepts
+#' for each response variable.
+#' @param size A numeric value \eqn{n} representing the number of units.
+#'
+#' @author Erick A. Chacón-Montalván
+#'
+#' @examples
+#' # Different effects for each response.
+#' mi(c(1:3), size = 10)
+#'
+#' @export
+mi <- function (beta, size) {
+  rep(beta, each = size)
+}
+
 #' @title Multivariate Factor Effects
 #'
 #' @description
