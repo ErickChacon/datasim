@@ -322,6 +322,7 @@ mgp <- function (coords, A, cor.model, cor.params, size = NULL, range = 1, geom 
 st_sample <- function (..., size) {
   output <- sf::st_sample(..., size = size * 2)
   output <- output[sample(1:length(output), size)]
+
   return(output)
 }
 # sf::7.2
