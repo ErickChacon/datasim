@@ -21,7 +21,7 @@ In this vignette, we show how to use the three main functions of the package
 introductory tutorial and only the simulation of linear Gaussian models are
 presented.
 
-#### Required packages
+## Required packages
 
 ```{r}
 library(datasim)
@@ -53,7 +53,7 @@ The name of these two functions `model_frame` and `model_response` were defined 
 similarity to the functions `model.frame` and `model.response`, which return the
 predictors and response variable for a given `formula` and `data.frame`.
 
-### Simulate the dataset
+## Simulate the dataset
 
 The data for our model can be simulated with the function `sim_model`.
 The two main arguments of `sim_model` function, when working with linear Gaussian
@@ -92,7 +92,7 @@ factor `sex`.
 knitr::kable(head(data_model, 10))
 ```
 
-### Simulate predictors only
+## Simulate predictors only
 
 `sim_model` simulate the entire dataset. If only predictors want to be simulated to
 have more control, the function `model_frame` can be used.  The two main arguments
@@ -108,7 +108,7 @@ covariates are simulated.
 knitr::kable(head(data_frame, 10))
 ```
 
-### Simulate the response variable only
+## Simulate the response variable only
 
 If the covariates are already obtained, we can simulate the response variable using the
 function `model_response`.
@@ -124,7 +124,7 @@ response variable and associated parameters are simulated.
 knitr::kable(head(data_frame, 10))
 ```
 
-### Simulate dataset step by step
+## Simulate dataset step by step
 
 Notice that the same results can be obtained using the either `sim_model` alone or
 `model_frame` and `model_response` together.
@@ -138,7 +138,7 @@ data_model <- model_frame(f, n = 100, seed = 1) %>%
 knitr::kable(head(data_model, 10))
 ```
 
-### Fitting a model to compare the parameters
+## Fitting a model to compare the parameters
 
 Once the data is simulated, we can use it to compare models, effects, etc. For
 example, we can fit a linear model to our simulated data with.

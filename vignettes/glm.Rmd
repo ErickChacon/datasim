@@ -16,11 +16,13 @@ knitr::opts_chunk$set(comment = "#>")
 options(width = 100)
 ```
 
+## Introduction
+
 In this vignette, we show how to simulate datasets to fit generalized linear models.
 We will start with a logistic linear model and then we will extend to common models
 used in the GLM framework.
 
-#### Required packages
+## Required packages
 
 ```{r}
 library(datasim)
