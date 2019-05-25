@@ -1,6 +1,7 @@
 language: r
+cache: packages
 sudo: required
-dist: trusty
+dist: xenial
 
 before_install:
   - sudo add-apt-repository ppa:ubuntugis/ppa --yes
