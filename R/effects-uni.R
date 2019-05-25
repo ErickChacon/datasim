@@ -154,7 +154,7 @@ gp <- function (coords, cor.model, cor.params, sigma2 = 1, size = NULL, geom = N
   if (!is.null(size)) {
     ncoords <- purrr::map(coords, is.na) %>% do.call(sum, .)
     if (ncoords == 2 && !is.null(geom) ) {
-      output <- st_sample(geom, size = size) %>%
+      output <- sf::st_sample(geom, size = size) %>%
         sf::st_coordinates() %>%
         as.data.frame() %>%
         as.list() %>%

@@ -16,7 +16,7 @@ Imports:
     dplyr,
     purrr,
     magrittr,
-    sf
+    sf (>= 0.7.4)
 RoxygenNote: 6.1.1
 Suggests: knitr,
     rmarkdown,

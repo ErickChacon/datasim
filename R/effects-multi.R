@@ -293,7 +293,7 @@ mgp <- function (coords, A, cor.model, cor.params, size = NULL, range = 1, geom 
   if (!is.null(size)) {
     ncoords <- purrr::map(coords, is.na) %>% do.call(sum, .)
     if (ncoords == 2 && !is.null(geom) ) {
-      output <- st_sample(geom, size = size) %>%
+      output <- sf::st_sample(geom, size = size) %>%
         sf::st_coordinates() %>%
         as.data.frame() %>%
         as.list() %>%
@@ -316,14 +316,4 @@ mgp <- function (coords, A, cor.model, cor.params, size = NULL, range = 1, geom 
   }
   return(output)
 }
-
-
-#' @importFrom sf st_sample
-st_sample <- function (..., size) {
-  output <- sf::st_sample(..., size = size * 2)
-  output <- output[sample(1:length(output), size)]
-
-  return(output)
-}
-# sf::7.2
 
