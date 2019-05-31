@@ -216,7 +216,12 @@ model_frame <- function (formula, n = nrow(idata) / q, idata = NULL,
     # Generate required covariates
     aux_names <- dplyr::filter(aux_covs, generate == "generator") %>%
       dplyr::pull("covs")
-    data[aux_names] <- eval(aux_call)
+    aux_covariate <- eval(aux_call)
+    if (inherits(aux_covariate, "sfc")) {
+      data[[aux_names]] <- aux_covariate
+    } else {
+      data[aux_names] <- aux_covariate
+    }
 
   }
 

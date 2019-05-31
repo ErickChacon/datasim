@@ -286,29 +286,44 @@ mre <- function (x, sigma, groups, size = NULL, replace = TRUE) {
 #'
 #' @importFrom stats dist runif rnorm model.matrix
 #' @importFrom purrr map reduce
+#' @importFrom sf st_dimension st_sample st_distance
 #'
 #' @export
-mgp <- function (coords, A, cor.model, cor.params, size = NULL, range = 1, geom = NULL) {
+mgp <- function (coords, A, cor.model = "exp_cor", cor.params, size = NULL, range = 1, geom = NULL) {
   q <- nrow(A)
   if (!is.null(size)) {
-    ncoords <- purrr::map(coords, is.na) %>% do.call(sum, .)
-    if (ncoords == 2 && !is.null(geom) ) {
-      output <- sf::st_sample(geom, size = size) %>%
-        sf::st_coordinates() %>%
-        as.data.frame() %>%
-        as.list() %>%
-        setNames(NULL) %>%
-        map(~ rep(., q))
+    # simulate coordinates
+    if (!is.null(geom) && sf::st_dimension(geom) == 2) {
+      output <- sf::st_sample(geom, size = size)
+      output <- rep(output, q)
+      # convert coordinates to list if adequate
+      if (exists("coords") && is.list(coords) && !inherits(coords, "sfc")) {
+        if (all(purrr::map_lgl(coords, ~ is.logical(.) || is.numeric(.))) &&
+            length(coords) == 2) {
+          output <- sfc_as_coords(output)
+        } else {
+          stop("dimensions of coords and geom are incompatible")
+        }
+      }
     } else {
+      ncoords <- purrr::map(coords, is.na) %>% do.call(sum, .)
       output <- replicate(ncoords, list(rep(range * stats::runif(size), q)))
     }
   } else {
-    coords <- do.call(cbind, coords)
-    coords <- coords[1:(nrow(coords) / q), , drop = FALSE]
-    n <- nrow(coords)
-    distance <- as.matrix(dist(coords))
+    # compute distance matrix
+    if (!is.null(geom) && sf::st_dimension(geom) == 2) {
+      if (!inherits(coords, "sfc")) coords <- coords_as_sfc(coords, geom)
+      coords <- coords[1:(length(coords) / q)]
+      n <- length(coords)
+      distance <- unclass(sf::st_distance(coords))
+    } else {
+      coords <- do.call(cbind, coords)
+      coords <- coords[1:(nrow(coords) / q), , drop = FALSE]
+      n <- nrow(coords)
+      distance <- as.matrix(dist(coords))
+    }
+    # simulate mgp
     rights <- purrr::map(cor.params, ~ chol(do.call(cor.model, c(list(distance), .))))
-
     igp <- purrr::map(rights, ~ as.numeric(crossprod(., stats::rnorm(n)))) %>%
       do.call(cbind, .)
     mgp <- tcrossprod(igp, A)

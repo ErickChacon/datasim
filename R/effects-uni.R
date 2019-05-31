@@ -148,30 +148,66 @@ exp_cor <- function (d, phi) {
 #'
 #' @importFrom stats dist rnorm runif
 #' @importFrom purrr map
+#' @importFrom sf st_dimension st_sample st_distance
 #'
 #' @export
-gp <- function (coords, cor.model, cor.params, sigma2 = 1, size = NULL, geom = NULL) {
+gp <- function (coords, cor.model = "exp_cor", cor.params, sigma2 = 1, size = NULL, range = 1, geom = NULL) {
   if (!is.null(size)) {
-    ncoords <- purrr::map(coords, is.na) %>% do.call(sum, .)
-    if (ncoords == 2 && !is.null(geom) ) {
-      output <- sf::st_sample(geom, size = size) %>%
-        sf::st_coordinates() %>%
-        as.data.frame() %>%
-        as.list() %>%
-        setNames(NULL)
+    # simulate coordinates
+    if (!is.null(geom) && sf::st_dimension(geom) == 2) {
+      output <- sf::st_sample(geom, size = size)
+      # convert coordinates to list if adequate
+      if (exists("coords") && is.list(coords) && !inherits(coords, "sfc")) {
+        if (all(purrr::map_lgl(coords, ~ is.logical(.) || is.numeric(.))) &&
+            length(coords) == 2) {
+          output <- sfc_as_coords(output)
+        } else {
+          stop("dimensions of coords and geom are incompatible")
+        }
+      }
     } else {
-      output <- replicate(ncoords, list(stats::runif(size)))
+      ncoords <- purrr::map(coords, is.na) %>% do.call(sum, .)
+      output <- replicate(ncoords, list(range * stats::runif(size)))
     }
   } else {
-    coords <- do.call(cbind, coords)
-    n <- nrow(coords)
-    distance <- as.matrix(dist(coords))
+    # compute distance matrix
+    if (!is.null(geom) && sf::st_dimension(geom) == 2) {
+      if (!inherits(coords, "sfc")) coords <- coords_as_sfc(coords, geom)
+      n <- length(coords)
+      distance <- unclass(sf::st_distance(coords))
+    } else {
+      coords <- do.call(cbind, coords)
+      n <- nrow(coords)
+      distance <- as.matrix(dist(coords))
+    }
+    # simulate gp
     varcov <- sigma2 * do.call(cor.model, c(list(distance), cor.params))
     right <- chol(varcov)
     output <- as.numeric(crossprod(right, rnorm(n)))
   }
   return(output)
 }
+
+#' @importFrom sf st_as_sf st_crs
+coords_as_sfc <- function (coords, geom) {
+  coords <- coords  %>%
+    setNames(c("x", "y"))  %>%
+    as.data.frame() %>%
+    sf::st_as_sf(coords = c("x", "y"), crs = sf::st_crs(geom)) %>%
+    st_geometry()
+  return(coords)
+}
+
+#' @importFrom sf st_coordinates
+sfc_as_coords <- function (sfc) {
+  sfc_list <- sfc %>%
+    sf::st_coordinates() %>%
+    as.data.frame() %>%
+    as.list() %>%
+    setNames(NULL)
+  return(sfc_list)
+}
+
 
 
 
