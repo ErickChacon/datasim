@@ -4,8 +4,8 @@
 \alias{mgp}
 \title{Multivariate Gaussian Processes}
 \usage{
-mgp(coords, A, cor.model, cor.params, size = NULL, range = 1,
-  geom = NULL)
+mgp(coords, A, cor.model = "exp_cor", cor.params, size = NULL,
+  range = 1, geom = NULL)
 }
 \arguments{
 \item{coords}{A list of replicated coordinates. Each coordinate is a \eqn{q} replicated

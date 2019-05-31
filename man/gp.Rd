@@ -4,8 +4,8 @@
 \alias{gp}
 \title{Simulate a Gaussian process}
 \usage{
-gp(coords, cor.model, cor.params, sigma2 = 1, size = NULL,
-  geom = NULL)
+gp(coords, cor.model = "exp_cor", cor.params, sigma2 = 1,
+  size = NULL, range = 1, geom = NULL)
 }
 \arguments{
 \item{coords}{A list of coordinates}
@@ -18,6 +18,8 @@ Should be used to compute the variance-covariance matrix}
 \item{sigma2}{variance of the Gaussian process}
 
 \item{size}{numeric value to simulate the covariate \code{x}}
+
+\item{range}{Range of the coordinates of the Gaussian processes.}
 
 \item{geom}{object of class ‘sf’ or ‘sfc’ to define the area where to simulate the
 samples}

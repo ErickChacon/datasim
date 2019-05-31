@@ -116,6 +116,7 @@ exp_cor <- function (d, phi) {
 #' @param cor.params A list of the parameters required by the \code{cor.model} function.
 #' @param sigma2 variance of the Gaussian process
 #' @param size numeric value to simulate the covariate \code{x}
+#' @param range Range of the coordinates of the Gaussian processes.
 #' @param geom object of class ‘sf’ or ‘sfc’ to define the area where to simulate the
 #' samples
 #'
@@ -188,13 +189,13 @@ gp <- function (coords, cor.model = "exp_cor", cor.params, sigma2 = 1, size = NU
   return(output)
 }
 
-#' @importFrom sf st_as_sf st_crs
+#' @importFrom sf st_as_sf st_crs st_geometry
 coords_as_sfc <- function (coords, geom) {
   coords <- coords  %>%
     setNames(c("x", "y"))  %>%
     as.data.frame() %>%
     sf::st_as_sf(coords = c("x", "y"), crs = sf::st_crs(geom)) %>%
-    st_geometry()
+    sf::st_geometry()
   return(coords)
 }
 
